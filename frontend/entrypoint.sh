@@ -11,8 +11,8 @@ if [ ! -f /app/.ng_initialized ]; then
 
   # Gera o skeleton do Angular em pasta temporária
   echo "--> Gerando skeleton Angular em /tmp/ng-skeleton..."
+  cd /tmp
   ng new ng-skeleton \
-    --directory /tmp/ng-skeleton \
     --standalone \
     --routing \
     --style=scss \
@@ -20,6 +20,7 @@ if [ ! -f /app/.ng_initialized ]; then
     --skip-install \
     --defaults \
     2>/dev/null
+  cd /app
 
   # Copia apenas os arquivos que ainda NÃO existem em /app
   echo "--> Mesclando skeleton com arquivos do projeto..."

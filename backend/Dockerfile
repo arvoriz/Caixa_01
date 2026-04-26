@@ -4,6 +4,7 @@ FROM ruby:${RUBY_VERSION}-alpine AS base
 RUN apk add --no-cache \
   build-base \
   postgresql-dev \
+  yaml-dev \
   nodejs \
   yarn \
   tzdata \

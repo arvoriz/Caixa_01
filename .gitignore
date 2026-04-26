@@ -23,6 +23,20 @@ node_modules/
 # Docker volumes
 postgres_data/
 
+# Rails — segredos (nunca commitar)
+/backend/config/master.key
+/backend/config/credentials.yml.enc
+
+# Gerado pelo rails new, conflita com o .github/ da raiz do projeto
+/backend/.github/
+
+# Editor pessoal
+/frontend/.vscode/
+
+# READMEs gerados pelos frameworks (usamos PROJETO.md na raiz)
+/backend/README.md
+/frontend/README.md
+
 # OS
 .DS_Store
 Thumbs.db
