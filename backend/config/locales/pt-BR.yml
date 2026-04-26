@@ -1,0 +1,14 @@
+pt-BR:
+  activerecord:
+    errors:
+      messages:
+        blank: "não pode ficar em branco"
+        taken: "já está em uso"
+        invalid: "é inválido"
+        too_short: "é muito curto (mínimo %{count} caracteres)"
+        too_long: "é muito longo (máximo %{count} caracteres)"
+  errors:
+    unauthorized: "Não autorizado"
+    forbidden: "Acesso negado"
+    not_found: "Recurso não encontrado"
+    unprocessable: "Não foi possível processar a requisição"

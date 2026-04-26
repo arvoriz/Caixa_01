@@ -1,0 +1,112 @@
+// ── Botões ───────────────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, opacity 0.15s;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &--primary {
+    background: var(--color-primary);
+    color: #fff;
+    &:hover:not(:disabled) { background: var(--color-primary-dark); }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-text-muted);
+    &:hover:not(:disabled) { background: var(--color-bg); color: var(--color-text); }
+  }
+
+  &--danger {
+    background: var(--color-error);
+    color: #fff;
+    &:hover:not(:disabled) { opacity: 0.85; }
+  }
+
+  &--full { width: 100%; }
+}
+
+// ── Formulários ──────────────────────────────────────────────────────────────
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.form-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  &::placeholder { color: var(--color-text-muted); }
+}
+
+.form-error {
+  font-size: 0.75rem;
+  color: var(--color-error);
+}
+
+// ── Cards ────────────────────────────────────────────────────────────────────
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  &__value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+// ── Alertas ──────────────────────────────────────────────────────────────────
+.alert {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+
+  &--error   { background: #FEF2F2; color: var(--color-error);   border: 1px solid #FECACA; }
+  &--success { background: #F0FDF4; color: var(--color-success); border: 1px solid #BBF7D0; }
+  &--warning { background: #FFFBEB; color: var(--color-warning); border: 1px solid #FDE68A; }
+}
+
+// ── Tipografia utilitária ─────────────────────────────────────────────────────
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+}

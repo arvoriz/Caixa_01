@@ -1,0 +1,38 @@
+source "https://rubygems.org"
+ruby "3.3.0"
+
+gem "rails", "~> 7.2"
+gem "pg", "~> 1.5"
+gem "puma", ">= 5.0"
+gem "bootsnap", require: false
+gem "tzinfo-data", platforms: %i[windows jruby]
+
+# API
+gem "rack-cors"
+gem "jsonapi-serializer"
+gem "kaminari"
+
+# Auth
+gem "bcrypt", "~> 3.1"
+gem "jwt"
+
+# Utils
+gem "active_model_serializers"
+
+group :development, :test do
+  gem "debug", platforms: %i[mri windows]
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "faker"
+  gem "dotenv-rails"
+end
+
+group :development do
+  gem "rubocop-rails-omakase", require: false
+  gem "brakeman", require: false
+end
+
+group :test do
+  gem "shoulda-matchers"
+  gem "database_cleaner-active_record"
+end

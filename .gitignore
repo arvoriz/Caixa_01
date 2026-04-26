@@ -1,0 +1,28 @@
+# Env
+.env
+.env.local
+
+# Markers de inicialização automática (cada clone inicializa do zero)
+backend/.rails_initialized
+frontend/.ng_initialized
+
+# Dependencies
+node_modules/
+.bundle/
+
+# Rails
+/backend/tmp/
+/backend/log/
+/backend/storage/
+/backend/.byebug_history
+
+# Angular
+/frontend/dist/
+/frontend/.angular/
+
+# Docker volumes
+postgres_data/
+
+# OS
+.DS_Store
+Thumbs.db
