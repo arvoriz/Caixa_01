@@ -26,7 +26,10 @@ RUN npm ci && npm run build -- --configuration production
 # --- Production serve ---
 FROM nginx:alpine AS production
 
-COPY --from=builder /app/dist/ /usr/share/nginx/html/
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist/frontend/browser/ /usr/share/nginx/html/
+COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
+COPY docker-entrypoint.production.sh /docker-entrypoint.production.sh
+RUN chmod +x /docker-entrypoint.production.sh
 
 EXPOSE 80
+ENTRYPOINT ["/docker-entrypoint.production.sh"]

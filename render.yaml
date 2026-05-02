@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: caixa01-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerTarget: production
+    branch: main
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+
+  - type: web
+    name: caixa01-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    dockerTarget: production
+    branch: main
+    envVars:
+      - key: BACKEND_URL
+        sync: false
