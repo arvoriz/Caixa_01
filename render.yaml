@@ -4,7 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    dockerTarget: production
+    dockerCommand: rails server -b 0.0.0.0
     branch: main
     envVars:
       - key: DATABASE_URL
@@ -23,7 +23,6 @@ services:
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: ./frontend
-    dockerTarget: production
     branch: main
     envVars:
       - key: BACKEND_URL
