@@ -5,10 +5,10 @@
       <p class="login-card__subtitle">Acesse sua conta para continuar</p>
     </div>
 
-    <form class="login-card__form" [formGroup]="form" (ngSubmit)="submit()">
+    <form class="login-card__form" [formGroup]="formulario" (ngSubmit)="enviar()">
 
-      @if (error) {
-        <div class="alert alert--error">{{ error }}</div>
+      @if (erro) {
+        <div class="alert alert--error">{{ erro }}</div>
       }
 
       <div class="form-group">
@@ -21,22 +21,22 @@
           placeholder="seu@email.com"
           autocomplete="email"
         />
-        @if (form.get('email')?.invalid && form.get('email')?.touched) {
+        @if (formulario.get('email')?.invalid && formulario.get('email')?.touched) {
           <span class="form-error">E-mail inválido</span>
         }
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="password">Senha</label>
+        <label class="form-label" for="senha">Senha</label>
         <input
-          id="password"
+          id="senha"
           class="form-input"
           type="password"
-          formControlName="password"
+          formControlName="senha"
           placeholder="••••••••"
           autocomplete="current-password"
         />
-        @if (form.get('password')?.invalid && form.get('password')?.touched) {
+        @if (formulario.get('senha')?.invalid && formulario.get('senha')?.touched) {
           <span class="form-error">Senha deve ter no mínimo 6 caracteres</span>
         }
       </div>
@@ -44,9 +44,9 @@
       <button
         class="btn btn--primary btn--full"
         type="submit"
-        [disabled]="loading"
+        [disabled]="carregando"
       >
-        {{ loading ? 'Entrando...' : 'Entrar' }}
+        {{ carregando ? 'Entrando...' : 'Entrar' }}
       </button>
 
     </form>

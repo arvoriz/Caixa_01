@@ -14,7 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401) {
-        inject(AuthService).logout();
+        inject(AuthService).sair();
       }
       return throwError(() => err);
     })

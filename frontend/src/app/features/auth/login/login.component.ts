@@ -15,26 +15,26 @@ export class LoginComponent {
   private auth   = inject(AuthService);
   private router = inject(Router);
 
-  form = this.fb.group({
-    email:    ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+  formulario = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    senha: ['', [Validators.required, Validators.minLength(6)]],
   });
 
-  loading = false;
-  error   = '';
+  carregando = false;
+  erro       = '';
 
-  submit() {
-    if (this.form.invalid) return;
-    this.loading = true;
-    this.error   = '';
+  enviar() {
+    if (this.formulario.invalid) return;
+    this.carregando = true;
+    this.erro       = '';
 
-    const { email, password } = this.form.value;
+    const { email, senha } = this.formulario.value;
 
-    this.auth.login(email!, password!).subscribe({
+    this.auth.entrar(email!, senha!).subscribe({
       next: () => this.router.navigate(['/']),
       error: (err) => {
-        this.error   = err.error?.errors?.[0] ?? 'Erro ao fazer login';
-        this.loading = false;
+        this.erro       = err.message ?? 'Erro ao fazer login';
+        this.carregando = false;
       },
     });
   }

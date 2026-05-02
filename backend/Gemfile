@@ -13,7 +13,6 @@ gem "jsonapi-serializer"
 gem "kaminari"
 
 # Auth
-gem "bcrypt", "~> 3.1"
 gem "jwt"
 
 # Utils

@@ -7,17 +7,17 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <header class="navbar">
       <div class="navbar__left">
-        <h1 class="navbar__title">{{ title }}</h1>
+        <h1 class="navbar__title">{{ titulo }}</h1>
       </div>
       <div class="navbar__right">
-        <span class="navbar__user">{{ auth.currentUser()?.name }}</span>
-        <button class="btn btn--ghost" (click)="auth.logout()">Sair</button>
+        <span class="navbar__usuario">{{ auth.usuarioAtual()?.nome }}</span>
+        <button class="btn btn--ghost" (click)="auth.sair()">Sair</button>
       </div>
     </header>
   `,
   styleUrl: './navbar.component.scss',
 })
 export class NavbarComponent {
-  auth = inject(AuthService);
-  title = 'Dashboard';
+  auth   = inject(AuthService);
+  titulo = 'Dashboard';
 }

@@ -1,8 +1,8 @@
 class ApplicationController < ActionController::API
-  include JsonResponse
-  include Authenticatable
+  include RespostaJson
+  include Autenticavel
 
-  rescue_from ActiveRecord::RecordNotFound,    with: :not_found
-  rescue_from ActiveRecord::RecordInvalid,     with: :unprocessable
-  rescue_from ActionController::ParameterMissing, with: :bad_request
+  rescue_from ActiveRecord::RecordNotFound,       with: :nao_encontrado
+  rescue_from ActiveRecord::RecordInvalid,        with: :nao_processavel
+  rescue_from ActionController::ParameterMissing, with: :requisicao_invalida
 end

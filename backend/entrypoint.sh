@@ -47,9 +47,10 @@ echo "--> Instalando gems..."
 bundle install --jobs 4 --retry 3
 
 # ── Banco de dados ────────────────────────────────────────────────────────────
-echo "--> Preparando banco de dados..."
-bundle exec rails db:create 2>/dev/null || true
-bundle exec rails db:migrate
+# O schema é gerenciado pelo Supabase (SQL aplicado diretamente no painel).
+# Rails apenas conecta ao banco existente.
+echo "--> Aplicando migrations pendentes (se houver)..."
+bundle exec rails db:migrate 2>/dev/null || true
 bundle exec rails db:seed 2>/dev/null || true
 
 # ── Remove PID travado (evita erro de restart) ────────────────────────────────

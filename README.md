@@ -1,4 +1,4 @@
-# WEB-III — Visão Geral do Projeto
+# Visão Geral do Projeto
 
 _Última atualização: 2026-04-26_
 
@@ -200,10 +200,3 @@ src/app/
 ### Design system
 
 Sem biblioteca de UI externa. Usa CSS puro com variáveis nativas para cores, espaçamentos, bordas e sombras. Classes utilitárias globais para botões, formulários, cards e alertas definidas em `src/styles/`.
-
----
-
-## Contextos para o assistente de IA
-
-A pasta `WEB-III/claude/` contém arquivos de contexto modularizados para uso com Claude Code.
-Consultar [claude/INDEX.md](claude/INDEX.md) para saber qual arquivo ler em cada situação.

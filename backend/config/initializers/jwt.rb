@@ -1,3 +1,3 @@
-# Auth::TokenService usa ENV["JWT_SECRET"] e ENV["JWT_EXPIRATION_HOURS"] diretamente.
-# Este arquivo existe para documentar as variáveis esperadas.
+# Auth::TokenService valida JWTs do Supabase via JWKS (ES256/RS256).
+# Chave pública obtida de: ENV["SUPABASE_URL"]/auth/v1/.well-known/jwks.json
 # Ver: app/services/auth/token_service.rb

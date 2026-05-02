@@ -6,7 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   template: `
     <div class="dashboard">
-      <h2 class="page-title">Bem-vindo, {{ auth.currentUser()?.name ?? '' }}</h2>
+      <h2 class="page-title">Bem-vindo, {{ auth.usuarioAtual()?.nome ?? '' }}</h2>
       <div class="card-grid">
         <!-- Cards de resumo virão aqui -->
         <div class="card">

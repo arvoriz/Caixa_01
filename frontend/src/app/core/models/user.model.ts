@@ -1,21 +1,14 @@
-export interface User {
+export type PerfilUsuario = 'dono' | 'socio' | 'contador';
+
+export interface Usuario {
   id: number;
-  name: string;
+  nome: string;
   email: string;
-  role: 'admin' | 'user';
-  created_at: string;
+  perfil: PerfilUsuario;
+  supabase_uid: string;
 }
 
-export interface AuthResponse {
-  data: {
-    token: string;
-    user: User;
-  };
-  meta: Record<string, unknown>;
-  errors: string[];
-}
-
-export interface ApiResponse<T> {
+export interface RespostaApi<T> {
   data: T;
   meta: Record<string, unknown>;
   errors: string[];

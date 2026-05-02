@@ -1,9 +1,2 @@
-puts "Criando usuário admin..."
-
-User.find_or_create_by(email: "admin@app.com") do |u|
-  u.name     = "Administrador"
-  u.password = "admin123"
-  u.role     = :admin
-end
-
+puts "Nenhum seed necessário — usuários são gerenciados pelo Supabase Auth."
 puts "Seeds concluídos."
