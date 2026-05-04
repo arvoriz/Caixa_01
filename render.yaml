@@ -1,6 +1,7 @@
 services:
   - type: web
     name: caixa01-backend
+    plan: free
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
@@ -20,6 +21,7 @@ services:
 
   - type: web
     name: caixa01-frontend
+    plan: free
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: ./frontend
