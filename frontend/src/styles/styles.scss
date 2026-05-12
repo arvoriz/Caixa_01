@@ -2,5 +2,8 @@
 @use 'reset';
 @use 'components';
 
-// Google Fonts (opcional — remover se for usar fonte local)
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

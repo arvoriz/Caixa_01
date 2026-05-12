@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { TokenStorageService } from '../../../core/services/token-storage.service';
+
 
 @Component({
   selector: 'app-login',
@@ -11,11 +13,12 @@ import { SupabaseService } from '../../../core/services/supabase.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent {
-  private fb       = inject(FormBuilder);
-  private auth     = inject(AuthService);
-  private supabase = inject(SupabaseService);
-  private router   = inject(Router);
+export class LoginComponent implements OnInit, OnDestroy {
+  private fb           = inject(FormBuilder);
+  private auth         = inject(AuthService);
+  private supabase     = inject(SupabaseService);
+  private router       = inject(Router);
+  private tokenStorage = inject(TokenStorageService);
 
   formulario = this.fb.group({
     nome:  [''],
@@ -28,6 +31,23 @@ export class LoginComponent {
   sucesso    = '';
   modoEscuro = true;
   isLogin    = true;
+
+  private handleMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type === 'SUPABASE_AUTH_SUCCESS' && event.data.accessToken) {
+      this.tokenStorage.set(event.data.accessToken);
+      this.auth.estaAutenticado.set(true);
+      this.router.navigate(['/']);
+    }
+  };
+
+  ngOnInit(): void {
+    window.addEventListener('message', this.handleMessage);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('message', this.handleMessage);
+  }
 
   alternarTema(): void {
     this.modoEscuro = !this.modoEscuro;

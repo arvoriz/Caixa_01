@@ -12,6 +12,10 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
+      {
+        path: 'empresas',
+        loadComponent: () => import('./features/empresas/empresas.component').then(m => m.EmpresasComponent),
+      },
       // Adicionar novas rotas aqui dentro do shell (área autenticada)
     ],
   },
@@ -21,6 +25,10 @@ export const routes: Routes = [
       {
         path: 'login',
         loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
+      },
+      {
+        path: 'callback',
+        loadComponent: () => import('./features/auth/callback/callback.component').then(m => m.CallbackComponent),
       },
     ],
   },
