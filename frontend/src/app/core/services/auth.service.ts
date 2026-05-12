@@ -30,6 +30,19 @@ export class AuthService {
     );
   }
 
+  cadastrar(email: string, senha: string, nome: string) {
+    return from(this.supabase.cadastrar(email, senha, nome)).pipe(
+      tap(({ data, error }) => {
+        if (error) throw error;
+        const token = data.session?.access_token;
+        if (token) {
+          this.tokenStorage.set(token);
+          this.estaAutenticado.set(true);
+        }
+      })
+    );
+  }
+
   sair() {
     this.supabase.sair();
     this.tokenStorage.remove();
