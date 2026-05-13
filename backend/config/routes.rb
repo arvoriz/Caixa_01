@@ -4,7 +4,8 @@ Rails.application.routes.draw do
       # Auth
       get "auth/me", to: "auth#me"
 
-      # Recursos (adicionar conforme o projeto crescer)
+      # Empresas
+      resources :empresas, only: [:index, :create]
     end
   end
 

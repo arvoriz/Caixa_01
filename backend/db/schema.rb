@@ -10,17 +10,99 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_25_000001) do
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+ActiveRecord::Schema[7.2].define(version: 0) do
+  create_schema "auth"
+  create_schema "extensions"
+  create_schema "graphql"
+  create_schema "graphql_public"
+  create_schema "pgbouncer"
+  create_schema "realtime"
+  create_schema "storage"
+  create_schema "vault"
 
-  create_table "users", force: :cascade do |t|
-    t.string "name", null: false
-    t.string "email", null: false
-    t.string "password_digest", null: false
-    t.integer "role", default: 1, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_stat_statements"
+  enable_extension "pgcrypto"
+  enable_extension "plpgsql"
+  enable_extension "supabase_vault"
+  enable_extension "uuid-ossp"
+
+  # Custom types defined in this database.
+  # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "papel_usuario", ["dono", "socio", "contador"]
+  create_enum "status_emprestimo", ["ativo", "quitado", "cancelado"]
+  create_enum "status_lancamento", ["pendente", "pago", "atrasado", "cancelado"]
+  create_enum "tipo_transacao", ["entrada", "saida"]
+
+  create_table "acessos_empresas", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "empresa_id", null: false
+    t.uuid "usuario_id", null: false
+    t.enum "papel", null: false, enum_type: "papel_usuario"
+    t.timestamptz "criado_em", default: -> { "now()" }, null: false
+    t.index ["empresa_id"], name: "acessos_empresas_empresa_id_idx"
+    t.index ["usuario_id"], name: "acessos_empresas_usuario_id_idx"
+    t.unique_constraint ["empresa_id", "usuario_id"], name: "acessos_empresas_empresa_id_usuario_id_key"
   end
+
+  create_table "categorias", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "empresa_id"
+    t.string "nome", null: false
+    t.enum "tipo", null: false, enum_type: "tipo_transacao"
+    t.boolean "padrao_sistema", default: false, null: false
+  end
+
+  create_table "empresas", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "cnpj", null: false
+    t.string "razao_social", null: false
+    t.string "nome_fantasia"
+    t.decimal "saldo_inicial", precision: 15, scale: 2, default: "0.0", null: false
+    t.timestamptz "criado_em", default: -> { "now()" }, null: false
+
+    t.unique_constraint ["cnpj"], name: "empresas_cnpj_key"
+  end
+
+  create_table "emprestimos_mutuo", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "empresa_origem_id", null: false
+    t.uuid "empresa_destino_id", null: false
+    t.string "descricao"
+    t.decimal "valor", precision: 15, scale: 2, null: false
+    t.decimal "saldo_devedor", precision: 15, scale: 2, null: false
+    t.enum "status", default: "ativo", null: false, enum_type: "status_emprestimo"
+    t.timestamptz "criado_em", default: -> { "now()" }, null: false
+    t.index ["empresa_destino_id"], name: "emprestimos_mutuo_empresa_destino_id_idx"
+    t.index ["empresa_origem_id"], name: "emprestimos_mutuo_empresa_origem_id_idx"
+  end
+
+  create_table "lancamentos", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "empresa_id", null: false
+    t.uuid "categoria_id", null: false
+    t.string "descricao", null: false
+    t.enum "tipo", null: false, enum_type: "tipo_transacao"
+    t.decimal "valor", precision: 15, scale: 2, null: false
+    t.date "data_vencimento", null: false
+    t.date "data_pagamento"
+    t.enum "status", default: "pendente", null: false, enum_type: "status_lancamento"
+    t.uuid "grupo_parcelamento_id"
+    t.timestamptz "criado_em", default: -> { "now()" }, null: false
+    t.index ["data_vencimento"], name: "lancamentos_data_vencimento_idx"
+    t.index ["empresa_id"], name: "lancamentos_empresa_id_idx"
+    t.index ["grupo_parcelamento_id"], name: "lancamentos_grupo_parcelamento_id_idx"
+  end
+
+  create_table "usuarios", id: :uuid, default: nil, force: :cascade do |t|
+    t.string "email", null: false
+    t.string "nome_completo"
+    t.timestamptz "criado_em", default: -> { "now()" }, null: false
+
+    t.unique_constraint ["email"], name: "usuarios_email_key"
+  end
+
+  add_foreign_key "acessos_empresas", "empresas", name: "acessos_empresas_empresa_id_fkey", on_delete: :cascade
+  add_foreign_key "acessos_empresas", "usuarios", name: "acessos_empresas_usuario_id_fkey", on_delete: :cascade
+  add_foreign_key "categorias", "empresas", name: "categorias_empresa_id_fkey", on_delete: :cascade
+  add_foreign_key "emprestimos_mutuo", "empresas", column: "empresa_destino_id", name: "emprestimos_mutuo_empresa_destino_id_fkey"
+  add_foreign_key "emprestimos_mutuo", "empresas", column: "empresa_origem_id", name: "emprestimos_mutuo_empresa_origem_id_fkey"
+  add_foreign_key "lancamentos", "categorias", name: "lancamentos_categoria_id_fkey"
+  add_foreign_key "lancamentos", "empresas", name: "lancamentos_empresa_id_fkey", on_delete: :cascade
+  add_foreign_key "usuarios", "auth.users", column: "id", name: "usuarios_id_fkey", on_delete: :cascade
 end
