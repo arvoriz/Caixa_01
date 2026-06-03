@@ -51,11 +51,23 @@ ActiveRecord::Schema[7.2].define(version: 0) do
     t.boolean "padrao_sistema", default: false, null: false
   end
 
+  create_table "convites", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "empresa_id", null: false
+    t.enum "papel", null: false, enum_type: "papel_usuario"
+    t.uuid "convidado_por", null: false
+    t.string "token", null: false
+    t.timestamptz "usado_em"
+    t.timestamptz "expira_em", null: false
+    t.timestamptz "criado_em", default: -> { "now()" }
+
+    t.unique_constraint ["token"], name: "convites_token_key"
+  end
+
   create_table "empresas", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "cnpj", null: false
     t.string "razao_social", null: false
     t.string "nome_fantasia"
-    t.decimal "saldo_inicial", precision: 15, scale: 2, default: "0.0", null: false
+    t.decimal "saldo_atual", precision: 15, scale: 2, default: "0.0", null: false
     t.timestamptz "criado_em", default: -> { "now()" }, null: false
 
     t.unique_constraint ["cnpj"], name: "empresas_cnpj_key"
@@ -93,6 +105,7 @@ ActiveRecord::Schema[7.2].define(version: 0) do
     t.string "email", null: false
     t.string "nome_completo"
     t.timestamptz "criado_em", default: -> { "now()" }, null: false
+    t.uuid "ultima_empresa_id"
 
     t.unique_constraint ["email"], name: "usuarios_email_key"
   end
@@ -100,9 +113,12 @@ ActiveRecord::Schema[7.2].define(version: 0) do
   add_foreign_key "acessos_empresas", "empresas", name: "acessos_empresas_empresa_id_fkey", on_delete: :cascade
   add_foreign_key "acessos_empresas", "usuarios", name: "acessos_empresas_usuario_id_fkey", on_delete: :cascade
   add_foreign_key "categorias", "empresas", name: "categorias_empresa_id_fkey", on_delete: :cascade
+  add_foreign_key "convites", "empresas", name: "convites_empresa_id_fkey", on_delete: :cascade
+  add_foreign_key "convites", "usuarios", column: "convidado_por", name: "convites_convidado_por_fkey"
   add_foreign_key "emprestimos_mutuo", "empresas", column: "empresa_destino_id", name: "emprestimos_mutuo_empresa_destino_id_fkey"
   add_foreign_key "emprestimos_mutuo", "empresas", column: "empresa_origem_id", name: "emprestimos_mutuo_empresa_origem_id_fkey"
   add_foreign_key "lancamentos", "categorias", name: "lancamentos_categoria_id_fkey"
   add_foreign_key "lancamentos", "empresas", name: "lancamentos_empresa_id_fkey", on_delete: :cascade
   add_foreign_key "usuarios", "auth.users", column: "id", name: "usuarios_id_fkey", on_delete: :cascade
+  add_foreign_key "usuarios", "empresas", column: "ultima_empresa_id", name: "usuarios_ultima_empresa_id_fkey", on_delete: :nullify
 end

@@ -1,11 +1,9 @@
-export type PerfilUsuario = 'dono' | 'socio' | 'contador';
-
 export interface Usuario {
-  id: number;
-  nome: string;
+  id: string;
+  nome_completo: string | null;
   email: string;
-  perfil: PerfilUsuario;
-  supabase_uid: string;
+  ultima_empresa_id: string | null;
+  criado_em: string;
 }
 
 export interface RespostaApi<T> {

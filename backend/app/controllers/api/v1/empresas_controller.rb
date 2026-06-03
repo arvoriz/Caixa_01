@@ -3,8 +3,7 @@ module Api
     class EmpresasController < BaseController
       def index
         empresas = usuario_atual.empresas.includes(:acessos_empresas)
-        data = empresas.map { |e| serializar(e) }
-        render_sucesso(data)
+        render_sucesso(empresas.map { |e| serializar(e) })
       end
 
       def create
@@ -14,10 +13,45 @@ module Api
         render_sucesso(serializar(empresa), status: :created)
       end
 
+      def update
+        empresa    = usuario_atual.empresas.find(params[:id])
+        meu_papel  = empresa.acessos_empresas.find_by!(usuario_id: usuario_atual.id).papel
+
+        return render_erro(["Sem permissão para editar"], status: :forbidden) if meu_papel == "contador"
+
+        empresa.update!(empresa_update_params)
+        render_sucesso(serializar(empresa))
+      rescue ActiveRecord::RecordNotFound
+        render_erro(["Empresa não encontrada"], status: :not_found)
+      end
+
+      def transferir_titularidade
+        empresa   = usuario_atual.empresas.find(params[:id])
+        meu_acc   = empresa.acessos_empresas.find_by!(usuario_id: usuario_atual.id)
+
+        return render_erro(["Apenas o dono pode transferir titularidade"], status: :forbidden) unless meu_acc.papel == "dono"
+
+        novo_acc = empresa.acessos_empresas.find(params[:acesso_id])
+        return render_erro(["Destino deve ser sócio"], status: :unprocessable_entity) unless novo_acc.papel == "socio"
+
+        ActiveRecord::Base.transaction do
+          meu_acc.update!(papel: :socio)
+          novo_acc.update!(papel: :dono)
+        end
+
+        render_sucesso({})
+      rescue ActiveRecord::RecordNotFound
+        render_erro(["Empresa ou acesso não encontrado"], status: :not_found)
+      end
+
       private
 
       def empresa_params
-        params.require(:empresa).permit(:cnpj, :razao_social, :nome_fantasia, :saldo_inicial)
+        params.require(:empresa).permit(:cnpj, :razao_social, :nome_fantasia, :saldo_atual)
+      end
+
+      def empresa_update_params
+        params.require(:empresa).permit(:nome_fantasia)
       end
 
       def serializar(empresa)

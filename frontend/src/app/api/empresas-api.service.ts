@@ -11,16 +11,30 @@ export interface Empresa {
   cnpj: string;
   razao_social: string;
   nome_fantasia: string | null;
-  saldo_inicial: string | null;
+  saldo_atual: string | null;
   criado_em: string;
   papel: PapelEmpresa;
+}
+
+export interface AcessoDetalhe {
+  id: string;
+  papel: PapelEmpresa;
+  usuario_id: string;
+  nome: string | null;
+  email: string;
+  criado_em: string;
 }
 
 export interface CriarEmpresaDto {
   cnpj: string;
   razao_social: string;
   nome_fantasia?: string;
-  saldo_inicial?: number | null;
+  saldo_atual?: number | null;
+}
+
+export interface ConviteResposta {
+  url: string;
+  expira_em: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -34,5 +48,35 @@ export class EmpresasApiService {
 
   criar(dto: CriarEmpresaDto): Observable<Empresa> {
     return this.http.post<RespostaApi<Empresa>>(this.base, { empresa: dto }).pipe(map(r => r.data));
+  }
+
+  atualizar(empresaId: string, dto: { nome_fantasia: string }): Observable<Empresa> {
+    return this.http
+      .patch<RespostaApi<Empresa>>(`${this.base}/${empresaId}`, { empresa: dto })
+      .pipe(map(r => r.data));
+  }
+
+  listarAcessos(empresaId: string): Observable<AcessoDetalhe[]> {
+    return this.http
+      .get<RespostaApi<AcessoDetalhe[]>>(`${this.base}/${empresaId}/acessos`)
+      .pipe(map(r => r.data));
+  }
+
+  removerAcesso(empresaId: string, acessoId: string): Observable<void> {
+    return this.http
+      .delete<RespostaApi<unknown>>(`${this.base}/${empresaId}/acessos/${acessoId}`)
+      .pipe(map(() => void 0));
+  }
+
+  gerarConvite(empresaId: string, papel: 'socio' | 'contador'): Observable<ConviteResposta> {
+    return this.http
+      .post<RespostaApi<ConviteResposta>>(`${this.base}/${empresaId}/convites`, { papel })
+      .pipe(map(r => r.data));
+  }
+
+  transferirTitularidade(empresaId: string, acessoId: string): Observable<void> {
+    return this.http
+      .post<RespostaApi<unknown>>(`${this.base}/${empresaId}/transferir_titularidade`, { acesso_id: acessoId })
+      .pipe(map(() => void 0));
   }
 }

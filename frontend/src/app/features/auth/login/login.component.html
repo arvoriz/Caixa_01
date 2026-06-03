@@ -56,6 +56,55 @@
   <!-- Card central -->
   <div class="card-login">
 
+   @if (etapaMfa) {
+
+    <!-- ── Etapa: Verificação 2FA ── -->
+    <div class="cabecalho-login">
+      <div class="icone-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <h2 class="titulo-login">Verificação em duas etapas</h2>
+      <p class="subtitulo-login">Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
+    </div>
+
+    <form class="form-login" (ngSubmit)="confirmarMfa()">
+      @if (erroMfa) {
+        <div class="alerta-erro">{{ erroMfa }}</div>
+      }
+
+      <div class="campo-login">
+        <span class="campo-login__icone">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <input
+          class="campo-login__input"
+          type="text"
+          inputmode="numeric"
+          maxlength="6"
+          [(ngModel)]="codigoMfa"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="000000"
+          autocomplete="one-time-code"
+        />
+      </div>
+
+      <button class="btn-entrar" type="submit" [disabled]="verificandoMfa || codigoMfa.length !== 6">
+        {{ verificandoMfa ? 'Verificando...' : 'Confirmar' }}
+      </button>
+    </form>
+
+    <div class="esqueceu-senha" style="justify-content:center;margin-top:1rem;">
+      <a href="#" (click)="$event.preventDefault(); cancelarMfa()">Voltar ao login</a>
+    </div>
+
+   } @else {
+
     <!-- Cabeçalho -->
     <div class="cabecalho-login">
       <div class="icone-logo">
@@ -182,6 +231,8 @@
       </svg>
       Continuar com o Google
     </button>
+
+   }
 
   </div>
 </div>
