@@ -1,9 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { SidebarComponent } from '../shared/components/sidebar/sidebar.component';
 import { ThemeService } from '../core/services/theme.service';
+import { AuthService } from '../core/services/auth.service';
+import { EmpresaAtivaService } from '../core/services/empresa-ativa.service';
 
 @Component({
   selector: 'app-shell',
@@ -23,6 +25,17 @@ import { ThemeService } from '../core/services/theme.service';
   `,
   styles: [':host { display: contents; }'],
 })
-export class ShellComponent {
-  theme = inject(ThemeService);
+export class ShellComponent implements OnInit {
+  theme        = inject(ThemeService);
+  private auth = inject(AuthService);
+  private empresaAtiva = inject(EmpresaAtivaService);
+
+  ngOnInit() {
+    this.auth.carregarUsuarioAtual().subscribe({
+      error: () => {
+        // auth/me falhou (ex: coluna ainda não existe) — inicializa sem preferência
+        this.empresaAtiva.inicializar(null);
+      },
+    });
+  }
 }

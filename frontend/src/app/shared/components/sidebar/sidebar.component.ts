@@ -1,15 +1,16 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { EmpresaAtivaService } from '../../../core/services/empresa-ativa.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <aside class="w-64 hidden md:flex flex-col border-r shrink-0 transition-colors duration-500"
+    <aside class="w-64 h-full hidden md:flex flex-col border-r shrink-0 transition-colors duration-500"
            [ngClass]="theme.isDark() ? 'bg-[#121214] border-[#2a2a2c]' : 'bg-white border-slate-200'">
 
       <!-- Logo -->
@@ -36,7 +37,8 @@ import { AuthService } from '../../../core/services/auth.service';
           Dashboard
         </a>
 
-        <a href="#" class="flex items-center px-4 py-3 rounded-xl transition-colors"
+        <a routerLink="/lancamentos" routerLinkActive="!bg-blue-600/10 !text-blue-500"
+           class="flex items-center px-4 py-3 rounded-xl transition-colors"
            [ngClass]="theme.isDark() ? 'text-gray-400 hover:bg-[#18181b] hover:text-gray-200' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -75,29 +77,39 @@ import { AuthService } from '../../../core/services/auth.service';
       <!-- Perfil do Usuário -->
       <div class="p-4 border-t shrink-0 transition-colors duration-500"
            [ngClass]="theme.isDark() ? 'border-[#2a2a2c]' : 'border-slate-200'">
-        <div class="flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer"
-             [ngClass]="theme.isDark() ? 'hover:bg-[#18181b]' : 'hover:bg-slate-100'">
+        <a routerLink="/perfil"
+           class="flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer group"
+           [ngClass]="theme.isDark() ? 'hover:bg-[#18181b]' : 'hover:bg-slate-100'">
           <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shrink-0">
             {{ iniciais }}
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium truncate">{{ auth.usuarioAtual()?.nome ?? 'Usuário' }}</p>
-            <p class="text-xs truncate transition-colors" [ngClass]="theme.isDark() ? 'text-gray-500' : 'text-slate-500'">Admin</p>
+            <p class="text-sm font-medium truncate">{{ auth.usuarioAtual()?.nome_completo ?? 'Usuário' }}</p>
+            <p class="text-xs truncate transition-colors" [ngClass]="theme.isDark() ? 'text-gray-500' : 'text-slate-500'">
+              {{ papelAtivo() }}
+            </p>
           </div>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 transition-colors" [ngClass]="theme.isDark() ? 'text-gray-500' : 'text-slate-400'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m9 18 6-6-6-6"/>
           </svg>
-        </div>
+        </a>
       </div>
     </aside>
   `,
 })
 export class SidebarComponent {
-  theme = inject(ThemeService);
-  auth  = inject(AuthService);
+  theme        = inject(ThemeService);
+  auth         = inject(AuthService);
+  empresaAtiva = inject(EmpresaAtivaService);
 
   get iniciais(): string {
-    const nome = this.auth.usuarioAtual()?.nome ?? '';
+    const nome = this.auth.usuarioAtual()?.nome_completo ?? '';
     return nome.split(' ').slice(0, 2).map((p: string) => p[0]).join('').toUpperCase() || 'U';
   }
+
+  papelAtivo = computed(() => {
+    const papel = this.empresaAtiva.ativa()?.papel;
+    if (!papel) return '—';
+    return ({ dono: 'Dono', socio: 'Sócio', contador: 'Contador' })[papel] ?? papel;
+  });
 }

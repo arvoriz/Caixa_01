@@ -1,4 +1,6 @@
 class AcessoEmpresa < ApplicationRecord
+  self.table_name = 'acessos_empresas'
+
   belongs_to :empresa
   belongs_to :usuario
 

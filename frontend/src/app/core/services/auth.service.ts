@@ -6,13 +6,15 @@ import { Usuario } from '../models/user.model';
 import { TokenStorageService } from './token-storage.service';
 import { SupabaseService } from './supabase.service';
 import { AuthApiService } from '../../api/auth-api.service';
+import { EmpresaAtivaService } from './empresa-ativa.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private tokenStorage = inject(TokenStorageService);
-  private supabase     = inject(SupabaseService);
-  private authApi      = inject(AuthApiService);
-  private router       = inject(Router);
+  private tokenStorage  = inject(TokenStorageService);
+  private supabase      = inject(SupabaseService);
+  private authApi       = inject(AuthApiService);
+  private router        = inject(Router);
+  private empresaAtiva  = inject(EmpresaAtivaService);
 
   usuarioAtual    = signal<Usuario | null>(null);
   estaAutenticado = signal<boolean>(this.tokenStorage.has());
@@ -48,6 +50,7 @@ export class AuthService {
     this.tokenStorage.remove();
     this.usuarioAtual.set(null);
     this.estaAutenticado.set(false);
+    this.empresaAtiva.limpar();
     this.router.navigate(['/auth/login']);
   }
 
@@ -56,6 +59,7 @@ export class AuthService {
       tap(res => {
         this.usuarioAtual.set(res.data);
         this.estaAutenticado.set(true);
+        this.empresaAtiva.inicializar(res.data.ultima_empresa_id);
       })
     );
   }

@@ -1,15 +1,17 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { TokenStorageService } from '../../../core/services/token-storage.service';
+import { ConviteApiService } from '../../../api/convite-api.service';
+import { INVITE_TOKEN_KEY } from '../convite/convite.component';
 
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -19,6 +21,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private supabase     = inject(SupabaseService);
   private router       = inject(Router);
   private tokenStorage = inject(TokenStorageService);
+  private conviteApi   = inject(ConviteApiService);
 
   formulario = this.fb.group({
     nome:  [''],
@@ -32,12 +35,18 @@ export class LoginComponent implements OnInit, OnDestroy {
   modoEscuro = true;
   isLogin    = true;
 
+  // ── Etapa 2FA ──
+  etapaMfa      = false;
+  codigoMfa     = '';
+  erroMfa       = '';
+  verificandoMfa = false;
+
   private handleMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) return;
     if (event.data?.type === 'SUPABASE_AUTH_SUCCESS' && event.data.accessToken) {
       this.tokenStorage.set(event.data.accessToken);
       this.auth.estaAutenticado.set(true);
-      this.router.navigate(['/']);
+      this.continuarAposLogin();
     }
   };
 
@@ -81,7 +90,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     if (this.isLogin) {
       this.auth.entrar(email!, senha!).subscribe({
-        next: () => this.router.navigate(['/']),
+        next: () => this.continuarAposLogin(),
         error: (err: Error) => {
           this.erro       = err.message ?? 'E-mail ou senha incorretos';
           this.carregando = false;
@@ -94,7 +103,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           if (!data.session) {
             this.sucesso = 'Conta criada! Verifique seu e-mail para confirmar o cadastro.';
           } else {
-            this.router.navigate(['/']);
+            this.continuarAposLogin();
           }
         },
         error: (err: Error) => {
@@ -102,6 +111,54 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.carregando = false;
         },
       });
+    }
+  }
+
+  // Após autenticar, verifica se há um 2FA pendente antes de liberar o acesso.
+  private async continuarAposLogin(): Promise<void> {
+    if (await this.supabase.precisaVerificarMfa()) {
+      this.etapaMfa   = true;
+      this.carregando = false;
+      return;
+    }
+    this.aceitarConvitePendenteENavegar();
+  }
+
+  async confirmarMfa(): Promise<void> {
+    if (this.codigoMfa.length !== 6) return;
+    this.verificandoMfa = true;
+    this.erroMfa        = '';
+
+    const { token, erro } = await this.supabase.verificarMfaLogin(this.codigoMfa);
+    if (erro) {
+      this.erroMfa        = 'Código inválido. Tente novamente.';
+      this.verificandoMfa = false;
+      return;
+    }
+    if (token) {
+      this.tokenStorage.set(token);
+      this.auth.estaAutenticado.set(true);
+    }
+    this.aceitarConvitePendenteENavegar();
+  }
+
+  cancelarMfa(): void {
+    this.auth.sair();
+    this.etapaMfa   = false;
+    this.codigoMfa  = '';
+    this.erroMfa    = '';
+  }
+
+  private aceitarConvitePendenteENavegar(): void {
+    const token = localStorage.getItem(INVITE_TOKEN_KEY);
+    if (token) {
+      localStorage.removeItem(INVITE_TOKEN_KEY);
+      this.conviteApi.aceitar(token).subscribe({
+        next:  () => this.router.navigate(['/empresas']),
+        error: () => this.router.navigate(['/empresas']), // navega mesmo se o convite já expirou
+      });
+    } else {
+      this.router.navigate(['/']);
     }
   }
 

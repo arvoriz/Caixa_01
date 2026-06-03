@@ -13,8 +13,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
+        path: 'lancamentos',
+        loadComponent: () => import('./features/lancamentos/lancamentos.component').then(m => m.LancamentosComponent),
+      },
+      {
         path: 'empresas',
         loadComponent: () => import('./features/empresas/empresas.component').then(m => m.EmpresasComponent),
+      },
+      {
+        path: 'perfil',
+        loadComponent: () => import('./features/perfil/perfil.component').then(m => m.PerfilComponent),
       },
       // Adicionar novas rotas aqui dentro do shell (área autenticada)
     ],
@@ -31,6 +39,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/callback/callback.component').then(m => m.CallbackComponent),
       },
     ],
+  },
+  {
+    path: 'convite',
+    loadComponent: () => import('./features/auth/convite/convite.component').then(m => m.ConviteComponent),
   },
   { path: '**', redirectTo: 'dashboard' },
 ];
