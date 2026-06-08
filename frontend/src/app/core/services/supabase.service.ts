@@ -30,6 +30,7 @@ export class SupabaseService {
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
         skipBrowserRedirect: true,
+        queryParams: { prompt: 'select_account' },
       },
     });
 
