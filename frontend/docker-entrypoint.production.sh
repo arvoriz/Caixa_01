@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-envsubst '${BACKEND_URL}' \
+envsubst '${BACKEND_URL} ${PORT}' \
   < /etc/nginx/conf.d/default.conf.template \
   > /etc/nginx/conf.d/default.conf
 
