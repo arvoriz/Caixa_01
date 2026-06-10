@@ -108,6 +108,10 @@ import { SupabaseService } from '../../core/services/supabase.service';
           }
         </div>
 
+        @if (erroMfa() && !mostrandoQr()) {
+          <p class="text-xs text-red-500 mt-2">{{ erroMfa() }}</p>
+        }
+
         <!-- Modal de ativação 2FA -->
         @if (mostrandoQr()) {
           <div class="mt-4 p-4 rounded-xl border transition-colors"
@@ -182,7 +186,7 @@ export class PerfilSegurancaComponent implements OnInit {
     const ids = user?.identities ?? [];
     this.temSenha.set(ids.some(i => i.provider === 'email'));
 
-    const fatores = await this.supabase.listarFatoresMfa();
+    const fatores = (await this.supabase.listarFatoresMfa()).filter(f => f.status === 'verified');
     this.mfaAtivo.set(fatores.length > 0);
     if (fatores.length > 0) this.fatorMfaId = fatores[0].id;
     this.carregandoMfa.set(false);
@@ -210,12 +214,16 @@ export class PerfilSegurancaComponent implements OnInit {
   }
 
   async toggleMfa() {
+    this.erroMfa.set('');
     if (this.mfaAtivo()) {
       const err = await this.supabase.desativarMfa(this.fatorMfaId);
       if (!err) { this.mfaAtivo.set(false); this.fatorMfaId = ''; }
+      else this.erroMfa.set(err);
     } else {
       const resultado = await this.supabase.ativarMfa();
-      if (resultado) {
+      if (resultado.erro) {
+        this.erroMfa.set(resultado.erro);
+      } else {
         this.fatorMfaId = resultado.id;
         this.qrCode.set(resultado.qrCode);
         this.mostrandoQr.set(true);

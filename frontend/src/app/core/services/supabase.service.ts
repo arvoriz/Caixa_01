@@ -86,17 +86,28 @@ export class SupabaseService {
 
   // ── MFA / 2FA ──────────────────────────────────────────────────────────────
 
-  async listarFatoresMfa(): Promise<Array<{ id: string }>> {
+  async listarFatoresMfa(): Promise<Array<{ id: string; status: string }>> {
     const { data } = await this.supabase.auth.mfa.listFactors();
     return data?.totp ?? [];
   }
 
-  async ativarMfa(): Promise<{ id: string; qrCode: string; secret: string } | null> {
+  async ativarMfa(): Promise<{ id: string; qrCode: string; secret: string; erro?: string }> {
+    // Remove fatores TOTP não verificados de tentativas anteriores: o Supabase
+    // rejeita um novo enroll com o mesmo friendlyName enquanto eles existirem.
+    const fatores = await this.listarFatoresMfa();
+    for (const fator of fatores) {
+      if (fator.status !== 'verified') {
+        await this.supabase.auth.mfa.unenroll({ factorId: fator.id });
+      }
+    }
+
     const { data, error } = await this.supabase.auth.mfa.enroll({
       factorType: 'totp',
       friendlyName: 'FluxoPro',
     });
-    if (error || !data) return null;
+    if (error || !data) {
+      return { id: '', qrCode: '', secret: '', erro: error?.message ?? 'Falha ao ativar 2FA.' };
+    }
     return { id: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret };
   }
 
@@ -119,7 +130,7 @@ export class SupabaseService {
 
   // Verifica o código TOTP no login e devolve o novo access_token (já em aal2).
   async verificarMfaLogin(codigo: string): Promise<{ token?: string; erro?: string }> {
-    const fatores = await this.listarFatoresMfa();
+    const fatores = (await this.listarFatoresMfa()).filter(f => f.status === 'verified');
     if (fatores.length === 0) return { erro: 'Nenhum fator 2FA configurado.' };
 
     const erro = await this.verificarMfa(fatores[0].id, codigo);

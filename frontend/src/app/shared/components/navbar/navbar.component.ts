@@ -113,6 +113,7 @@ import { Empresa } from '../../../api/empresas-api.service';
         </button>
 
         <!-- Notificações -->
+        <!--
         <button class="relative p-2 rounded-full border transition-all duration-300 shadow-sm"
                 [ngClass]="theme.isDark()
                   ? 'bg-[#121214] border-[#2a2a2c] text-gray-400 hover:text-white'
@@ -124,6 +125,7 @@ import { Empresa } from '../../../api/empresas-api.service';
             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
           </svg>
         </button>
+        -->
 
         <!-- Novo Lançamento -->
         <button (click)="novoLancamento()"
