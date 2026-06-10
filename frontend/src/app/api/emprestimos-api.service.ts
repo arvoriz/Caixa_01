@@ -74,9 +74,9 @@ export class EmprestimosApiService {
       .pipe(map(r => r.data));
   }
 
-  excluir(empresaId: string, id: string): Observable<void> {
+  cancelar(empresaId: string, id: string): Observable<Emprestimo> {
     return this.http
-      .delete<RespostaApi<unknown>>(`${this.base(empresaId)}/${id}`)
-      .pipe(map(() => void 0));
+      .post<RespostaApi<Emprestimo>>(`${this.base(empresaId)}/${id}/cancelar`, {})
+      .pipe(map(r => r.data));
   }
 }

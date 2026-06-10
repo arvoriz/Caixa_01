@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         resources :emprestimos, only: [:index, :create, :update, :destroy] do
           member do
             post :registrar_pagamento
+            post :cancelar
           end
         end
         resources :relatorios, only: [] do

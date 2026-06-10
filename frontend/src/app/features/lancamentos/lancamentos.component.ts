@@ -44,11 +44,13 @@ import { extrairErroApi } from '../../core/utils/erro-api';
             <option value="atrasado">Atrasado</option>
             <option value="cancelado">Cancelado</option>
           </select>
-          <button (click)="abrirNovo()"
-                  class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Novo
-          </button>
+          @if (!empresaAtiva.soLeitura()) {
+            <button (click)="abrirNovo()"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Novo
+            </button>
+          }
         </div>
       </div>
 
@@ -72,13 +74,15 @@ import { extrairErroApi } from '../../core/utils/erro-api';
           </div>
           <h3 class="font-bold text-lg mb-1">Nenhum lançamento encontrado</h3>
           <p class="text-sm mb-6 transition-colors" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-500'">
-            Registre a primeira entrada ou saída do caixa desta empresa.
+            {{ empresaAtiva.soLeitura() ? 'Esta empresa ainda não possui lançamentos registrados.' : 'Registre a primeira entrada ou saída do caixa desta empresa.' }}
           </p>
-          <button (click)="abrirNovo()"
-                  class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Novo Lançamento
-          </button>
+          @if (!empresaAtiva.soLeitura()) {
+            <button (click)="abrirNovo()"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Novo Lançamento
+            </button>
+          }
         </div>
       } @else {
         <app-lancamento-tabela

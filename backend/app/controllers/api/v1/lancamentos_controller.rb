@@ -3,6 +3,9 @@ module Api
     class LancamentosController < BaseController
       include EscopoEmpresa
 
+      # Dono e sócio podem mexer; contador tem acesso somente leitura (index).
+      before_action :bloquear_somente_leitura!, only: %i[create update cancelar propagar_grupo parcelar destroy]
+
       # GET /api/v1/empresas/:empresa_id/lancamentos
       # Filtros opcionais: status, tipo, busca (descrição)
       def index

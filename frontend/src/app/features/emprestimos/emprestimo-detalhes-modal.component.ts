@@ -1,4 +1,4 @@
-import { Component, inject, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../core/services/theme.service';
@@ -13,13 +13,13 @@ import { formatarValor, formatarData, labelTipo, nomeCredor } from './emprestimo
   imports: [CommonModule, FormsModule],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" (click)="fechar($event)">
-      <div class="w-full max-w-lg rounded-2xl shadow-2xl border flex flex-col max-h-[90vh]"
+      <div class="w-full max-w-lg rounded-2xl shadow-2xl border flex flex-col max-h-[90vh] overflow-hidden"
            [ngClass]="t.isDark() ? 'bg-[#121214] border-[#2a2a2c]' : 'bg-white border-slate-200'"
            (click)="$event.stopPropagation()">
 
         <!-- Header -->
         <div class="flex items-center justify-between p-6 border-b transition-colors" [ngClass]="t.isDark() ? 'border-[#2a2a2c]' : 'border-slate-100'">
-          <h3 class="text-lg font-bold">Detalhes do Contrato</h3>
+          <h3 class="text-lg font-bold">Detalhes do Empréstimo</h3>
           <button (click)="fechar()" class="p-1 rounded-lg transition-colors" [ngClass]="t.isDark() ? 'text-gray-400 hover:bg-[#18181b]' : 'text-slate-400 hover:bg-slate-100'">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
@@ -92,8 +92,8 @@ import { formatarValor, formatarData, labelTipo, nomeCredor } from './emprestimo
             </div>
           </div>
 
-          <!-- Registrar pagamento (só ativo) -->
-          @if (loan.status === 'ativo') {
+          <!-- Registrar pagamento (só ativo e com permissão de escrita) -->
+          @if (editavel()) {
             <div class="p-4 rounded-xl border" [ngClass]="t.isDark() ? 'border-[#2a2a2c] bg-[#18181b]' : 'border-slate-100 bg-slate-50'">
               <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Registrar pagamento</label>
               <div class="flex gap-2">
@@ -111,39 +111,37 @@ import { formatarValor, formatarData, labelTipo, nomeCredor } from './emprestimo
             </div>
           }
 
-          <!-- Edição -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Descrição</label>
-              <input [(ngModel)]="descricao" type="text"
-                     class="w-full text-sm rounded-xl px-3 py-2 border outline-none transition-colors"
-                     [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white' : 'bg-white border-slate-200 text-slate-900'">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Status</label>
-              <select [(ngModel)]="status"
-                      class="w-full text-sm rounded-xl px-3 py-2 border outline-none transition-colors"
-                      [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white' : 'bg-white border-slate-200 text-slate-900'">
-                <option value="ativo">Ativo</option>
-                <option value="quitado">Quitado</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </div>
+          <!-- Edição da descrição (somente empréstimo ativo e com permissão) -->
+          <div>
+            <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Descrição</label>
+            <input [(ngModel)]="descricao" type="text" [disabled]="!editavel()"
+                   class="w-full text-sm rounded-xl px-3 py-2 border outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                   [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white' : 'bg-white border-slate-200 text-slate-900'">
           </div>
+
+          @if (loan.status !== 'ativo') {
+            <p class="text-xs" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-400'">
+              Empréstimo {{ loan.status === 'quitado' ? 'quitado' : 'cancelado' }} — não pode mais ser modificado.
+            </p>
+          }
         </div>
 
         <!-- Footer -->
-        <div class="p-6 border-t flex justify-between items-center transition-colors" [ngClass]="t.isDark() ? 'border-[#2a2a2c] bg-[#121214]' : 'border-slate-100 bg-slate-50'">
-          <button (click)="excluir()" [disabled]="ocupado()" class="text-sm font-medium text-red-500 hover:text-red-400 transition-colors disabled:opacity-60">Excluir</button>
+        <div class="p-6 border-t flex items-center transition-colors" [ngClass]="(editavel() ? 'justify-between' : 'justify-end') + ' ' + (t.isDark() ? 'border-[#2a2a2c] bg-[#121214]' : 'border-slate-100 bg-slate-50')">
+          @if (editavel()) {
+            <button (click)="cancelarEmprestimo()" [disabled]="ocupado()" class="text-sm font-medium text-red-500 hover:text-red-400 transition-colors disabled:opacity-60">Cancelar empréstimo</button>
+          }
           <div class="flex gap-3">
             <button (click)="fechar()" class="px-5 py-2.5 rounded-xl text-sm font-medium border transition-colors"
                     [ngClass]="t.isDark() ? 'border-[#2a2a2c] text-gray-300 hover:bg-[#18181b]' : 'border-slate-200 text-slate-600 hover:bg-slate-100'">
               Fechar
             </button>
-            <button (click)="salvarEdicao()" [disabled]="ocupado()"
-                    class="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
-              Salvar Edição
-            </button>
+            @if (editavel()) {
+              <button (click)="salvarEdicao()" [disabled]="ocupado()"
+                      class="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                Salvar Edição
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -161,10 +159,13 @@ export class EmprestimoDetalhesModalComponent implements OnInit {
 
   loan!: Emprestimo;
   descricao = '';
-  status: StatusEmprestimo = 'ativo';
   valorPago: number | null = null;
   ocupado = signal(false);
   erro    = signal('');
+  estado  = signal<StatusEmprestimo>('ativo');
+
+  // Empréstimo só é editável se estiver ativo e o usuário não for contador (somente leitura).
+  editavel = computed(() => this.estado() === 'ativo' && !this.empresaAtiva.soLeitura());
 
   formatarValor = formatarValor;
   formatarData  = formatarData;
@@ -174,7 +175,7 @@ export class EmprestimoDetalhesModalComponent implements OnInit {
   ngOnInit() {
     this.loan = this.emprestimo;
     this.descricao = this.loan.descricao ?? '';
-    this.status    = this.loan.status;
+    this.estado.set(this.loan.status);
   }
 
   private get empresaId(): string | null {
@@ -197,7 +198,7 @@ export class EmprestimoDetalhesModalComponent implements OnInit {
     this.api.registrarPagamento(id, this.loan.id, v).subscribe({
       next: (atualizado) => {
         this.loan = atualizado;
-        this.status = atualizado.status;
+        this.estado.set(atualizado.status);
         this.valorPago = null;
         this.ocupado.set(false);
         this.atualizado.emit();
@@ -211,21 +212,21 @@ export class EmprestimoDetalhesModalComponent implements OnInit {
     if (!id) return;
     this.ocupado.set(true);
     this.erro.set('');
-    this.api.atualizar(id, this.loan.id, { descricao: this.descricao.trim(), status: this.status }).subscribe({
+    this.api.atualizar(id, this.loan.id, { descricao: this.descricao.trim() }).subscribe({
       next: () => { this.ocupado.set(false); this.atualizado.emit(); this.fechado.emit(); },
       error: (err) => { this.erro.set(extrairErroApi(err, 'Erro ao salvar.')); this.ocupado.set(false); },
     });
   }
 
-  excluir() {
+  cancelarEmprestimo() {
     const id = this.empresaId;
     if (!id) return;
-    if (!confirm('Excluir este empréstimo? O saldo devedor pendente será desfeito.')) return;
+    if (!confirm('Cancelar este empréstimo? O saldo devedor pendente será desfeito e o contrato ficará como cancelado.')) return;
     this.ocupado.set(true);
     this.erro.set('');
-    this.api.excluir(id, this.loan.id).subscribe({
+    this.api.cancelar(id, this.loan.id).subscribe({
       next: () => { this.ocupado.set(false); this.atualizado.emit(); this.fechado.emit(); },
-      error: (err) => { this.erro.set(extrairErroApi(err, 'Erro ao excluir.')); this.ocupado.set(false); },
+      error: (err) => { this.erro.set(extrairErroApi(err, 'Erro ao cancelar.')); this.ocupado.set(false); },
     });
   }
 

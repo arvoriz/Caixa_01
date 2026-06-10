@@ -23,11 +23,13 @@ import { EmprestimoDetalhesModalComponent } from './emprestimo-detalhes-modal.co
             Gerencie obrigações com terceiros (bancos/pessoas) e mútuos entre suas empresas.
           </p>
         </div>
-        <button (click)="abrirNovo()"
-                class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-          Novo Contrato
-        </button>
+        @if (!empresaAtiva.soLeitura()) {
+          <button (click)="abrirNovo()"
+                  class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Novo Empréstimo
+          </button>
+        }
       </div>
 
       @if (!empresaAtiva.ativa()) {
@@ -77,12 +79,14 @@ import { EmprestimoDetalhesModalComponent } from './emprestimo-detalhes-modal.co
             </div>
             <h3 class="font-bold text-lg mb-1">Nenhum empréstimo encontrado</h3>
             <p class="text-sm mb-6 transition-colors" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-500'">
-              Registre o primeiro contrato de empréstimo desta empresa.
+              {{ empresaAtiva.soLeitura() ? 'Esta empresa ainda não possui empréstimos registrados.' : 'Registre o primeiro empréstimo desta empresa.' }}
             </p>
-            <button (click)="abrirNovo()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              Novo Contrato
-            </button>
+            @if (!empresaAtiva.soLeitura()) {
+              <button (click)="abrirNovo()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Novo Empréstimo
+              </button>
+            }
           </div>
         } @else {
           <app-emprestimo-lista [emprestimos]="filtrados()" (abrir)="abrirDetalhes($event)" />

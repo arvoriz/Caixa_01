@@ -3,6 +3,9 @@ module Api
     class CategoriasController < BaseController
       include EscopoEmpresa
 
+      # Contador tem acesso somente leitura (index).
+      before_action :bloquear_somente_leitura!, only: %i[create]
+
       # GET /api/v1/empresas/:empresa_id/categorias
       # Retorna categorias padrão do sistema + categorias próprias da empresa.
       def index

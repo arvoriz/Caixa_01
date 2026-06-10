@@ -1,6 +1,7 @@
 import { Component, inject, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../core/services/theme.service';
+import { EmpresaAtivaService } from '../../core/services/empresa-ativa.service';
 import { Lancamento } from '../../api/lancamentos-api.service';
 import { formatarValor, formatarData, labelStatus, corStatus, corPontoStatus, infoParcela } from './lancamentos.helpers';
 
@@ -72,7 +73,7 @@ import { formatarValor, formatarData, labelStatus, corStatus, corPontoStatus, in
               </p>
             </div>
             <div class="flex items-center gap-1">
-              @if (item.status !== 'cancelado') {
+              @if (item.status !== 'cancelado' && !empresaAtiva.soLeitura()) {
                 <button (click)="$event.stopPropagation(); cancelar.emit(item)" title="Cancelar"
                         class="p-2 rounded-lg transition-colors"
                         [ngClass]="t.isDark() ? 'text-gray-400 hover:bg-[#2a2a2c] hover:text-red-500' : 'text-slate-400 hover:bg-slate-100 hover:text-red-600'">
@@ -115,7 +116,8 @@ export class LancamentoTabelaComponent implements OnChanges {
   @Output() editar   = new EventEmitter<Lancamento>();
   @Output() cancelar = new EventEmitter<Lancamento>();
 
-  t = inject(ThemeService);
+  t            = inject(ThemeService);
+  empresaAtiva = inject(EmpresaAtivaService);
 
   itemsPerPage = 8;
   paginaAtual  = 1;

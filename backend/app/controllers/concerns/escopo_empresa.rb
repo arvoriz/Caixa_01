@@ -14,4 +14,17 @@ module EscopoEmpresa
   def empresa_atual
     @empresa_atual
   end
+
+  # Papel do usuário autenticado na empresa ativa: dono, socio ou contador.
+  def papel_atual
+    @papel_atual ||= empresa_atual&.acessos_empresas&.find_by(usuario_id: usuario_atual.id)&.papel
+  end
+
+  # Guard para ações de escrita: o contador tem acesso somente leitura.
+  # Use como before_action nos endpoints de mutação (only: %i[create update ...]).
+  def bloquear_somente_leitura!
+    return unless papel_atual == "contador"
+
+    render_erro(["Contador tem acesso somente leitura"], status: :forbidden)
+  end
 end

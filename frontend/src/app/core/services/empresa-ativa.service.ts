@@ -1,5 +1,5 @@
-import { Injectable, inject, signal } from '@angular/core';
-import { EmpresasApiService, Empresa } from '../../api/empresas-api.service';
+import { Injectable, inject, signal, computed } from '@angular/core';
+import { EmpresasApiService, Empresa, PapelEmpresa } from '../../api/empresas-api.service';
 import { AuthApiService } from '../../api/auth-api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +9,12 @@ export class EmpresaAtivaService {
 
   empresas = signal<Empresa[]>([]);
   ativa    = signal<Empresa | null>(null);
+
+  /** Papel do usuário na empresa ativa. */
+  papel = computed<PapelEmpresa | null>(() => this.ativa()?.papel ?? null);
+
+  /** Contador é somente leitura: usado para esconder ações de escrita na UI. */
+  soLeitura = computed(() => this.papel() === 'contador');
 
   inicializar(ultimaEmpresaId: string | null) {
     this.api.listar().subscribe(lista => {

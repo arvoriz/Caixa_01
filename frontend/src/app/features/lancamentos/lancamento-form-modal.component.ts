@@ -307,7 +307,7 @@ export class LancamentoFormModalComponent implements OnInit {
 
   mostrarCamposParcela = computed(() => this.parcelado() || (this.editando && this.ehParcelado()));
   ehParcelado          = computed(() => !!this.lancamento?.grupo_parcelamento_id);
-  somenteLeitura       = computed(() => this.lancamento?.status === 'pago' || this.lancamento?.status === 'cancelado');
+  somenteLeitura       = computed(() => this.empresaAtiva.soLeitura() || this.lancamento?.status === 'pago' || this.lancamento?.status === 'cancelado');
 
   grupoInfo = computed(() => {
     const gid = this.lancamento?.grupo_parcelamento_id;
