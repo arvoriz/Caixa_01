@@ -182,16 +182,16 @@ import { extrairErroApi } from '../../core/utils/erro-api';
                 } @else {
                   <div class="space-y-3">
                     @for (acesso of acessos; track acesso.id) {
-                      <div class="flex items-center justify-between p-3.5 rounded-xl border transition-colors"
+                      <div class="flex items-center justify-between gap-2 p-3.5 rounded-xl border transition-colors"
                            [ngClass]="t.isDark() ? 'bg-[#121214] border-[#2a2a2c]' : 'bg-white border-slate-200'">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
                           <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                                [ngClass]="avatarPapel(acesso.papel)">
                             {{ (acesso.nome || acesso.email).charAt(0).toUpperCase() }}
                           </div>
-                          <div>
-                            <p class="text-sm font-bold leading-none mb-1">{{ acesso.nome || acesso.email }}</p>
-                            <p class="text-xs transition-colors" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-500'">
+                          <div class="min-w-0">
+                            <p class="text-sm font-bold leading-none mb-1 truncate">{{ acesso.nome || acesso.email }}</p>
+                            <p class="text-xs truncate transition-colors" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-500'">
                               {{ acesso.email }}
                             </p>
                           </div>

@@ -50,8 +50,8 @@ import { formatarValor } from './relatorios.helpers';
         <div class="p-5 border-b" [ngClass]="t.isDark() ? 'border-[#2a2a2c]' : 'border-slate-100'">
           <h3 class="font-bold">Demonstrativo por Categoria</h3>
         </div>
-        <div class="flex-1 overflow-y-auto">
-          <table class="w-full text-sm text-left">
+        <div class="flex-1 overflow-auto">
+          <table class="w-full text-sm text-left min-w-[420px]">
             <tbody>
               <tr class="bg-green-500/5">
                 <td colspan="2" class="px-6 py-3 text-xs font-bold text-green-600 uppercase tracking-wider">Receitas (+)</td>

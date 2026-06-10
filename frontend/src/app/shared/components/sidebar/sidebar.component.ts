@@ -4,14 +4,23 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EmpresaAtivaService } from '../../../core/services/empresa-ativa.service';
+import { LayoutUiService } from '../../../core/services/layout-ui.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <aside class="w-64 h-full hidden md:flex flex-col border-r shrink-0 transition-colors duration-500"
-           [ngClass]="theme.isDark() ? 'bg-[#121214] border-[#2a2a2c]' : 'bg-white border-slate-200'">
+    <!-- Overlay mobile -->
+    @if (ui.sidebarAberta()) {
+      <div class="fixed inset-0 bg-black/50 z-40 md:hidden" (click)="ui.fecharSidebar()"></div>
+    }
+
+    <aside class="w-64 h-full flex flex-col border-r shrink-0 fixed md:static inset-y-0 left-0 z-50 transition-[transform,colors] duration-300 md:translate-x-0"
+           [ngClass]="[
+             theme.isDark() ? 'bg-[#121214] border-[#2a2a2c]' : 'bg-white border-slate-200',
+             ui.sidebarAberta() ? 'translate-x-0' : '-translate-x-full'
+           ]">
 
       <!-- Logo -->
       <div class="h-20 flex items-center px-6 border-b shrink-0 transition-colors duration-500"
@@ -25,7 +34,7 @@ import { EmpresaAtivaService } from '../../../core/services/empresa-ativa.servic
       </div>
 
       <!-- Navegação -->
-      <nav class="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
+      <nav class="flex-1 py-6 px-4 space-y-1 overflow-y-auto" (click)="ui.fecharSidebar()">
 
         <a routerLink="/dashboard" routerLinkActive="!bg-blue-600/10 !text-blue-500"
            class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors"
@@ -79,7 +88,7 @@ import { EmpresaAtivaService } from '../../../core/services/empresa-ativa.servic
       <!-- Perfil do Usuário -->
       <div class="p-4 border-t shrink-0 transition-colors duration-500"
            [ngClass]="theme.isDark() ? 'border-[#2a2a2c]' : 'border-slate-200'">
-        <a routerLink="/perfil"
+        <a routerLink="/perfil" (click)="ui.fecharSidebar()"
            class="flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer group"
            [ngClass]="theme.isDark() ? 'hover:bg-[#18181b]' : 'hover:bg-slate-100'">
           <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shrink-0">
@@ -103,6 +112,7 @@ export class SidebarComponent {
   theme        = inject(ThemeService);
   auth         = inject(AuthService);
   empresaAtiva = inject(EmpresaAtivaService);
+  ui           = inject(LayoutUiService);
 
   get iniciais(): string {
     const nome = this.auth.usuarioAtual()?.nome_completo ?? '';

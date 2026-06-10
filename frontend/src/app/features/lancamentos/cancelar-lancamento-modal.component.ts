@@ -55,18 +55,18 @@ export interface ConfirmarCancelamentoDto {
                 Este lançamento faz parte de um grupo de parcelas. Ao confirmar,
                 <strong>todas as parcelas não canceladas</strong> serão canceladas.
               </p>
-              <div class="grid grid-cols-3 gap-2 text-center">
-                <div class="rounded-lg p-2" [ngClass]="t.isDark() ? 'bg-[#121214]' : 'bg-white'">
-                  <p class="text-lg font-bold text-green-500">{{ pagas() }}</p>
-                  <p class="text-xs" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Pagas</p>
+              <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
+                <div class="rounded-lg p-1.5 sm:p-2" [ngClass]="t.isDark() ? 'bg-[#121214]' : 'bg-white'">
+                  <p class="text-base sm:text-lg font-bold text-green-500">{{ pagas() }}</p>
+                  <p class="text-[10px] sm:text-xs" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Pagas</p>
                 </div>
-                <div class="rounded-lg p-2" [ngClass]="t.isDark() ? 'bg-[#121214]' : 'bg-white'">
-                  <p class="text-lg font-bold text-red-500">{{ atrasadas() }}</p>
-                  <p class="text-xs" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Atrasadas</p>
+                <div class="rounded-lg p-1.5 sm:p-2" [ngClass]="t.isDark() ? 'bg-[#121214]' : 'bg-white'">
+                  <p class="text-base sm:text-lg font-bold text-red-500">{{ atrasadas() }}</p>
+                  <p class="text-[10px] sm:text-xs" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Atrasadas</p>
                 </div>
-                <div class="rounded-lg p-2" [ngClass]="t.isDark() ? 'bg-[#121214]' : 'bg-white'">
-                  <p class="text-lg font-bold" [ngClass]="t.isDark() ? 'text-gray-300' : 'text-slate-700'">{{ pendentes() }}</p>
-                  <p class="text-xs" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Pendentes</p>
+                <div class="rounded-lg p-1.5 sm:p-2" [ngClass]="t.isDark() ? 'bg-[#121214]' : 'bg-white'">
+                  <p class="text-base sm:text-lg font-bold" [ngClass]="t.isDark() ? 'text-gray-300' : 'text-slate-700'">{{ pendentes() }}</p>
+                  <p class="text-[10px] sm:text-xs" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Pendentes</p>
                 </div>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { EmpresaAtivaService } from '../../../core/services/empresa-ativa.service';
 import { LancamentoUiService } from '../../../core/services/lancamento-ui.service';
+import { LayoutUiService } from '../../../core/services/layout-ui.service';
 import { Empresa } from '../../../api/empresas-api.service';
 
 @Component({
@@ -12,13 +13,24 @@ import { Empresa } from '../../../api/empresas-api.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <header class="h-20 flex items-center justify-between px-6 lg:px-10 border-b shrink-0 transition-colors duration-500 z-10 relative"
+    <header class="h-20 flex items-center justify-between px-4 md:px-6 lg:px-10 border-b shrink-0 transition-colors duration-500 z-10 relative"
             [ngClass]="theme.isDark()
               ? 'bg-[#0a0a0b]/80 border-[#2a2a2c] backdrop-blur-md'
               : 'bg-slate-50/80 border-slate-200 backdrop-blur-md'">
 
       <!-- Seletor de Empresa -->
-      <div class="flex items-center gap-3 relative">
+      <div class="flex items-center gap-2 md:gap-3 relative">
+        <!-- Menu mobile -->
+        <button (click)="ui.toggleSidebar()"
+                class="md:hidden p-2 rounded-lg border transition-all duration-200 shrink-0"
+                [ngClass]="theme.isDark()
+                  ? 'bg-[#121214] border-[#2a2a2c] text-gray-300 hover:text-white'
+                  : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'"
+                aria-label="Abrir menu">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>
+          </svg>
+        </button>
         <p class="hidden md:block text-xs font-semibold uppercase tracking-wider transition-colors"
            [ngClass]="theme.isDark() ? 'text-gray-500' : 'text-slate-400'">Empresa Ativa</p>
 
@@ -30,7 +42,7 @@ import { Empresa } from '../../../api/empresas-api.service';
                   : 'bg-white border-slate-200 hover:border-blue-400 text-slate-800'">
           <div class="w-2 h-2 rounded-full shrink-0"
                [ngClass]="empresaAtiva.ativa() ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-400'"></div>
-          <span class="text-sm font-medium truncate max-w-[180px]">{{ nomeEmpresaAtiva() }}</span>
+          <span class="text-sm font-medium truncate max-w-[120px] sm:max-w-[180px]">{{ nomeEmpresaAtiva() }}</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1 opacity-50 shrink-0 transition-transform duration-200"
                [class.rotate-180]="aberto()"
                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -40,7 +52,7 @@ import { Empresa } from '../../../api/empresas-api.service';
 
         <!-- Dropdown -->
         @if (aberto()) {
-          <div class="absolute top-full left-0 mt-2 w-72 rounded-xl border shadow-2xl z-50 overflow-hidden"
+          <div class="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] sm:w-72 rounded-xl border shadow-2xl z-50 overflow-hidden"
                [ngClass]="theme.isDark() ? 'bg-[#121214] border-[#2a2a2c]' : 'bg-white border-slate-200'">
 
             <div class="px-3 py-2 border-b transition-colors"
@@ -130,24 +142,25 @@ import { Empresa } from '../../../api/empresas-api.service';
         <!-- Novo Lançamento (oculto para contador — somente leitura) -->
         @if (!empresaAtiva.soLeitura()) {
           <button (click)="novoLancamento()"
-                  class="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-2.5 md:px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14"/><path d="M12 5v14"/>
             </svg>
-            Novo Lançamento
+            <span class="hidden md:inline">Novo Lançamento</span>
           </button>
         }
 
         <!-- Sair -->
         <button (click)="auth.sair()"
-                class="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-colors border"
+                class="flex items-center gap-1.5 px-2.5 md:px-3 py-2 rounded-xl text-sm transition-colors border"
                 [ngClass]="theme.isDark()
                   ? 'border-[#2a2a2c] text-gray-400 hover:text-white hover:border-gray-500'
-                  : 'border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300'">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  : 'border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300'"
+                aria-label="Sair">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
           </svg>
-          Sair
+          <span class="hidden md:inline">Sair</span>
         </button>
       </div>
     </header>
@@ -159,6 +172,7 @@ export class NavbarComponent {
   empresaAtiva = inject(EmpresaAtivaService);
   private router       = inject(Router);
   private lancamentoUi = inject(LancamentoUiService);
+  ui                   = inject(LayoutUiService);
 
   aberto = signal(false);
 
