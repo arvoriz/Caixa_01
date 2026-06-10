@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ThemeService } from '../../core/services/theme.service';
 import { EmpresasApiService, Empresa } from '../../api/empresas-api.service';
+import { extrairErroApi } from '../../core/utils/erro-api';
 
 @Component({
   selector: 'app-empresa-criar-modal',
@@ -160,7 +161,7 @@ export class EmpresaCriarModalComponent {
         this.fechado.emit();
       },
       error: (err) => {
-        this.erro     = err?.error?.errors?.[0] ?? 'Erro ao salvar empresa.';
+        this.erro     = extrairErroApi(err, 'Erro ao salvar empresa.');
         this.salvando = false;
       },
     });

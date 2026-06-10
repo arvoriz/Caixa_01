@@ -7,11 +7,13 @@ import { LancamentoUiService } from '../../core/services/lancamento-ui.service';
 import { LancamentosApiService, Lancamento, StatusLancamento } from '../../api/lancamentos-api.service';
 import { LancamentoTabelaComponent } from './lancamento-tabela.component';
 import { LancamentoFormModalComponent } from './lancamento-form-modal.component';
+import { CancelarLancamentoModalComponent, ConfirmarCancelamentoDto } from './cancelar-lancamento-modal.component';
+import { extrairErroApi } from '../../core/utils/erro-api';
 
 @Component({
   selector: 'app-lancamentos',
   standalone: true,
-  imports: [CommonModule, FormsModule, LancamentoTabelaComponent, LancamentoFormModalComponent],
+  imports: [CommonModule, FormsModule, LancamentoTabelaComponent, LancamentoFormModalComponent, CancelarLancamentoModalComponent],
   template: `
     <div class="p-6 lg:p-10 flex flex-col">
 
@@ -29,11 +31,11 @@ import { LancamentoFormModalComponent } from './lancamento-form-modal.component'
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-400'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
-            <input [(ngModel)]="busca" type="text" placeholder="Buscar lançamento..."
+            <input [ngModel]="busca()" (ngModelChange)="busca.set($event)" type="text" placeholder="Buscar lançamento..."
                    class="w-full lg:w-64 text-sm rounded-xl pl-9 pr-4 py-2.5 border outline-none transition-colors focus:border-blue-500"
                    [ngClass]="t.isDark() ? 'bg-[#121214] border-[#2a2a2c] text-white' : 'bg-white border-slate-200 text-slate-900'">
           </div>
-          <select [(ngModel)]="filtroStatus"
+          <select [ngModel]="filtroStatus()" (ngModelChange)="filtroStatus.set($event)"
                   class="text-sm rounded-xl px-4 py-2.5 border outline-none transition-colors focus:border-blue-500"
                   [ngClass]="t.isDark() ? 'bg-[#121214] border-[#2a2a2c] text-gray-300' : 'bg-white border-slate-200 text-slate-700'">
             <option value="">Todos os status</option>
@@ -81,20 +83,32 @@ import { LancamentoFormModalComponent } from './lancamento-form-modal.component'
       } @else {
         <app-lancamento-tabela
           [lancamentos]="lancamentosFiltrados()"
+          [todosLancamentos]="lancamentos()"
           (editar)="abrirEdicao($event)"
-          (excluir)="excluir($event)"
+          (cancelar)="abrirCancelamento($event)"
         />
         <p class="text-xs mt-4 transition-colors" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-500'">
           {{ lancamentosFiltrados().length }} lançamento(s)
         </p>
       }
 
-      <!-- Modal -->
+      <!-- Modal form -->
       @if (modalAberto()) {
         <app-lancamento-form-modal
           [lancamento]="emEdicao()"
+          [todosLancamentos]="lancamentos()"
           (fechado)="modalAberto.set(false)"
           (salvo)="onSalvo()"
+        />
+      }
+
+      <!-- Modal cancelamento -->
+      @if (cancelarModalAberto() && emCancelamento()) {
+        <app-cancelar-lancamento-modal
+          [lancamento]="emCancelamento()!"
+          [todosLancamentos]="lancamentos()"
+          (fechado)="cancelarModalAberto.set(false)"
+          (confirmado)="onCancelado($event)"
         />
       }
     </div>
@@ -110,19 +124,23 @@ export class LancamentosComponent {
   carregando  = signal(false);
   erro        = signal('');
 
-  busca       = '';
-  filtroStatus: StatusLancamento | '' = '';
+  busca        = signal('');
+  filtroStatus = signal<StatusLancamento | ''>('');
 
   modalAberto = signal(false);
   emEdicao    = signal<Lancamento | null>(null);
 
+  cancelarModalAberto = signal(false);
+  emCancelamento      = signal<Lancamento | null>(null);
+
   private ultimoAbrir = 0;
 
   lancamentosFiltrados = computed(() => {
-    const termo = this.busca.trim().toLowerCase();
+    const termo  = this.busca().trim().toLowerCase();
+    const status = this.filtroStatus();
     return this.lancamentos().filter(l => {
-      const matchBusca  = !termo || l.descricao.toLowerCase().includes(termo);
-      const matchStatus = !this.filtroStatus || l.status === this.filtroStatus;
+      const matchBusca  = !termo  || l.descricao.toLowerCase().includes(termo);
+      const matchStatus = !status || l.status === status;
       return matchBusca && matchStatus;
     });
   });
@@ -135,7 +153,7 @@ export class LancamentosComponent {
     effect(() => {
       const emp = this.empresaAtiva.ativa();
       if (emp) this.carregar(emp.id);
-    });
+    }, { allowSignalWrites: true });
 
     // Abre o modal quando o botão do navbar é clicado
     effect(() => {
@@ -144,7 +162,7 @@ export class LancamentosComponent {
         this.ultimoAbrir = n;
         this.abrirNovo();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   private carregar(empresaId: string) {
@@ -171,13 +189,20 @@ export class LancamentosComponent {
     if (emp) this.carregar(emp.id);
   }
 
-  excluir(lancamento: Lancamento) {
+  abrirCancelamento(lancamento: Lancamento) {
+    this.emCancelamento.set(lancamento);
+    this.cancelarModalAberto.set(true);
+  }
+
+  onCancelado(dto: ConfirmarCancelamentoDto) {
     const emp = this.empresaAtiva.ativa();
-    if (!emp) return;
-    if (!confirm(`Excluir o lançamento "${lancamento.descricao}"?`)) return;
-    this.api.excluir(emp.id, lancamento.id).subscribe({
-      next: () => this.lancamentos.update(lista => lista.filter(l => l.id !== lancamento.id)),
-      error: () => this.erro.set('Erro ao excluir lançamento.'),
+    const lanc = this.emCancelamento();
+    if (!emp || !lanc) return;
+
+    this.cancelarModalAberto.set(false);
+    this.api.cancelar(emp.id, lanc.id, dto.estorno, dto.valor_estorno).subscribe({
+      next: () => this.carregar(emp.id),
+      error: (err) => this.erro.set(extrairErroApi(err, 'Erro ao cancelar lançamento.')),
     });
   }
 }

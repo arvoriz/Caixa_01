@@ -1,4 +1,4 @@
-import { StatusLancamento } from '../../api/lancamentos-api.service';
+import { Lancamento, StatusLancamento } from '../../api/lancamentos-api.service';
 
 export function formatarValor(valor: string | number): string {
   return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -31,4 +31,15 @@ export function corPontoStatus(status: StatusLancamento): string {
     atrasado:  'bg-red-500',
     cancelado: 'bg-gray-500',
   })[status] ?? '';
+}
+
+/** Retorna "X/Y" se o lançamento fizer parte de um grupo parcelado, ou null caso contrário. */
+export function infoParcela(item: Lancamento, todos: Lancamento[]): string | null {
+  if (!item.grupo_parcelamento_id) return null;
+  const grupo = todos
+    .filter(l => l.grupo_parcelamento_id === item.grupo_parcelamento_id)
+    .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento));
+  const indice = grupo.findIndex(l => l.id === item.id);
+  if (indice === -1) return null;
+  return `${indice + 1}/${grupo.length}`;
 }

@@ -7,6 +7,7 @@ import {
   formatarSaldo, labelPapel, badgePapel, avatarPapel,
   corPapel, corPapelBg, podeRemoverAcesso,
 } from './empresas.helpers';
+import { extrairErroApi } from '../../core/utils/erro-api';
 
 @Component({
   selector: 'app-empresa-gerenciar-modal',
@@ -292,14 +293,14 @@ export class EmpresaGerenciarModalComponent implements OnInit {
         this.salvandoDados = false;
         this.empresaAtualizada.emit({ ...atualizada, papel: this.empresa.papel });
       },
-      error: (err) => { this.erro = err?.error?.errors?.[0] ?? 'Erro ao salvar.'; this.salvandoDados = false; },
+      error: (err) => { this.erro = extrairErroApi(err, 'Erro ao salvar.'); this.salvandoDados = false; },
     });
   }
 
   removerAcesso(acesso: AcessoDetalhe) {
     this.api.removerAcesso(this.empresa.id, acesso.id).subscribe({
       next: () => { this.acessos = this.acessos.filter(a => a.id !== acesso.id); },
-      error: (err) => { this.erro = err?.error?.errors?.[0] ?? 'Erro ao remover acesso.'; },
+      error: (err) => { this.erro = extrairErroApi(err, 'Erro ao remover acesso.'); },
     });
   }
 
@@ -308,7 +309,7 @@ export class EmpresaGerenciarModalComponent implements OnInit {
     this.linkGerado  = '';
     this.api.gerarConvite(this.empresa.id, this.papelConvite).subscribe({
       next: resp => { this.linkGerado = resp.url; this.gerandoLink = false; },
-      error: (err) => { this.erro = err?.error?.errors?.[0] ?? 'Erro ao gerar link.'; this.gerandoLink = false; },
+      error: (err) => { this.erro = extrairErroApi(err, 'Erro ao gerar link.'); this.gerandoLink = false; },
     });
   }
 
@@ -329,7 +330,7 @@ export class EmpresaGerenciarModalComponent implements OnInit {
         });
         this.empresaAtualizada.emit({ ...this.empresa, papel: 'socio' });
       },
-      error: (err) => { this.erro = err?.error?.errors?.[0] ?? 'Erro ao transferir titularidade.'; },
+      error: (err) => { this.erro = extrairErroApi(err, 'Erro ao transferir titularidade.'); },
     });
   }
 }

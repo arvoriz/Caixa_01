@@ -17,7 +17,10 @@ module Lancamentos
     private
 
     def criar_unico
-      Lancamento.create!(@params.merge(empresa_id: @empresa.id))
+      validar_saldo!(@params[:valor])
+      lance = Lancamento.create!(@params.merge(empresa_id: @empresa.id))
+      GerenciarSaldo.ao_pagar(@empresa, lance) if lance.status == 'pago'
+      lance
     end
 
     def criar_parcelado
@@ -28,17 +31,25 @@ module Lancamentos
 
       ActiveRecord::Base.transaction do
         (1..@parcelas).map do |n|
-          Lancamento.create!(
+          lance = Lancamento.create!(
             @params.merge(
               empresa_id:            @empresa.id,
               descricao:             "#{base_descricao} (#{n}/#{@parcelas})",
               valor:                 valor_parcela,
-              data_vencimento:       vencimento_base >> (n - 1), # soma n-1 meses
+              data_vencimento:       vencimento_base >> (n - 1),
               grupo_parcelamento_id: grupo
             )
           )
+          GerenciarSaldo.ao_pagar(@empresa, lance) if lance.status == 'pago'
+          lance
         end
       end
+    end
+
+    def validar_saldo!(valor)
+      return unless @params[:status] == 'pago' && @params[:tipo] == 'saida'
+      total = valor.to_d * @parcelas
+      raise GerenciarSaldo::SaldoInsuficiente, "Saldo insuficiente para este lançamento de saída" if @empresa.saldo_atual.to_d < total
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 0) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_09_120000) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -99,6 +99,19 @@ ActiveRecord::Schema[7.2].define(version: 0) do
     t.index ["data_vencimento"], name: "lancamentos_data_vencimento_idx"
     t.index ["empresa_id"], name: "lancamentos_empresa_id_idx"
     t.index ["grupo_parcelamento_id"], name: "lancamentos_grupo_parcelamento_id_idx"
+  end
+
+  create_table "logs_auditoria", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "usuario_id"
+    t.uuid "empresa_id"
+    t.string "acao", null: false
+    t.string "entidade", null: false
+    t.uuid "entidade_id"
+    t.jsonb "detalhes", default: {}, null: false
+    t.timestamptz "criado_em", default: -> { "now()" }, null: false
+    t.index ["criado_em"], name: "index_logs_auditoria_on_criado_em"
+    t.index ["empresa_id"], name: "index_logs_auditoria_on_empresa_id"
+    t.index ["usuario_id"], name: "index_logs_auditoria_on_usuario_id"
   end
 
   create_table "usuarios", id: :uuid, default: nil, force: :cascade do |t|

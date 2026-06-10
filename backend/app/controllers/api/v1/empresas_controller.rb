@@ -10,6 +10,16 @@ module Api
         empresa = Empresa.new(empresa_params)
         empresa.save!
         AcessoEmpresa.create!(empresa: empresa, usuario: usuario_atual, papel: :dono)
+
+        Auditoria::Registrador.registrar(
+          usuario:     usuario_atual,
+          empresa:     empresa,
+          acao:        'criar_empresa',
+          entidade:    'empresa',
+          entidade_id: empresa.id,
+          detalhes:    { cnpj: empresa.cnpj, razao_social: empresa.razao_social, nome_fantasia: empresa.nome_fantasia }
+        )
+
         render_sucesso(serializar(empresa), status: :created)
       end
 
@@ -19,7 +29,24 @@ module Api
 
         return render_erro(["Sem permissão para editar"], status: :forbidden) if meu_papel == "contador"
 
+        valores_antes = empresa.attributes.slice(*empresa_update_params.keys)
         empresa.update!(empresa_update_params)
+
+        alteracoes = empresa_update_params.keys.each_with_object({}) do |campo, h|
+          antes  = valores_antes[campo]
+          depois = empresa.attributes[campo]
+          h[campo] = { de: antes, para: depois } if antes.to_s != depois.to_s
+        end
+
+        Auditoria::Registrador.registrar(
+          usuario:     usuario_atual,
+          empresa:     empresa,
+          acao:        'atualizar_empresa',
+          entidade:    'empresa',
+          entidade_id: empresa.id,
+          detalhes:    { alteracoes: alteracoes }
+        )
+
         render_sucesso(serializar(empresa))
       rescue ActiveRecord::RecordNotFound
         render_erro(["Empresa não encontrada"], status: :not_found)

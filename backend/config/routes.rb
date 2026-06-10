@@ -17,7 +17,13 @@ Rails.application.routes.draw do
         resources :acessos,     only: [:index, :destroy], controller: "empresa_acessos"
         resources :convites,    only: [:create],          controller: "empresa_convites"
         resources :categorias,  only: [:index, :create]
-        resources :lancamentos, only: [:index, :create, :update, :destroy]
+        resources :lancamentos, only: [:index, :create, :update, :destroy] do
+          member do
+            post :cancelar
+            patch :propagar_grupo
+            post  :parcelar
+          end
+        end
       end
     end
   end

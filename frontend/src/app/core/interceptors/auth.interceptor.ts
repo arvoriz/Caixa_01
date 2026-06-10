@@ -5,7 +5,8 @@ import { TokenStorageService } from '../services/token-storage.service';
 import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = inject(TokenStorageService).get();
+  const token       = inject(TokenStorageService).get();
+  const authService = inject(AuthService); // injetar aqui, no contexto correto
 
   if (token) {
     req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
@@ -14,7 +15,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401) {
-        inject(AuthService).sair();
+        authService.sair(); // usar a referência já injetada
       }
       return throwError(() => err);
     })

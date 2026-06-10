@@ -1,4 +1,6 @@
 class EmprestimoMutuo < ApplicationRecord
+  self.table_name = 'emprestimos_mutuo'
+
   belongs_to :empresa_origem,  class_name: 'Empresa', foreign_key: :empresa_origem_id
   belongs_to :empresa_destino, class_name: 'Empresa', foreign_key: :empresa_destino_id
 

@@ -65,6 +65,29 @@ export class LancamentosApiService {
       .pipe(map(r => r.data));
   }
 
+  propagarGrupo(empresaId: string, id: string, valor: number): Observable<void> {
+    return this.http
+      .patch<RespostaApi<unknown>>(`${this.base(empresaId)}/${id}/propagar_grupo`, { valor })
+      .pipe(map(() => void 0));
+  }
+
+  parcelar(empresaId: string, id: string, parcelas: number): Observable<void> {
+    return this.http
+      .post<RespostaApi<unknown>>(`${this.base(empresaId)}/${id}/parcelar`, { parcelas })
+      .pipe(map(() => void 0));
+  }
+
+  cancelar(
+    empresaId: string,
+    id: string,
+    estorno: 'nenhum' | 'parcial' | 'integral',
+    valor_estorno?: number,
+  ): Observable<void> {
+    return this.http
+      .post<RespostaApi<unknown>>(`${this.base(empresaId)}/${id}/cancelar`, { estorno, valor_estorno })
+      .pipe(map(() => void 0));
+  }
+
   excluir(empresaId: string, id: string): Observable<void> {
     return this.http
       .delete<RespostaApi<unknown>>(`${this.base(empresaId)}/${id}`)

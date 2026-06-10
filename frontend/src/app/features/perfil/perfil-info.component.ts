@@ -5,6 +5,7 @@ import { ThemeService } from '../../core/services/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthApiService } from '../../api/auth-api.service';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { extrairErroApi } from '../../core/utils/erro-api';
 
 @Component({
   selector: 'app-perfil-info',
@@ -154,7 +155,7 @@ export class PerfilInfoComponent implements OnInit {
         setTimeout(() => this.sucesso.set(false), 3000);
       },
       error: err => {
-        this.erro.set(err?.error?.errors?.[0] ?? 'Erro ao salvar.');
+        this.erro.set(extrairErroApi(err, 'Erro ao salvar.'));
         this.salvando.set(false);
       },
     });

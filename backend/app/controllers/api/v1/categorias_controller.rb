@@ -17,6 +17,16 @@ module Api
         categoria = empresa_atual.categorias.new(categoria_params)
         categoria.padrao_sistema = false
         categoria.save!
+
+        Auditoria::Registrador.registrar(
+          usuario:     usuario_atual,
+          empresa:     empresa_atual,
+          acao:        'criar_categoria',
+          entidade:    'categoria',
+          entidade_id: categoria.id,
+          detalhes:    { nome: categoria.nome, tipo: categoria.tipo }
+        )
+
         render_sucesso(serializar(categoria), status: :created)
       end
 

@@ -1,11 +1,21 @@
-import { Component, inject, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Observable, switchMap, of } from 'rxjs';
 import { ThemeService } from '../../core/services/theme.service';
 import { EmpresaAtivaService } from '../../core/services/empresa-ativa.service';
 import { CategoriasApiService, Categoria, TipoTransacao } from '../../api/categorias-api.service';
 import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.service';
+import { extrairErroApi } from '../../core/utils/erro-api';
+
+/** Data atual no formato YYYY-MM-DD no fuso horário local (evita o "dia seguinte" do toISOString em UTC). */
+function dataLocalIso(): string {
+  const d = new Date();
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
 
 @Component({
   selector: 'app-lancamento-form-modal',
@@ -21,12 +31,10 @@ import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.ser
         <!-- Header -->
         <div class="flex items-center justify-between p-6 border-b transition-colors"
              [ngClass]="t.isDark() ? 'border-[#2a2a2c]' : 'border-slate-100'">
-          <h3 class="text-lg font-bold">{{ editando ? 'Editar Lançamento' : 'Novo Lançamento' }}</h3>
+          <h3 class="text-lg font-bold">{{ somenteLeitura() ? 'Detalhes do Lançamento' : (editando ? 'Editar Lançamento' : 'Novo Lançamento') }}</h3>
           <button (click)="fechar()" class="p-1 rounded-lg transition-colors"
                   [ngClass]="t.isDark() ? 'text-gray-400 hover:bg-[#18181b]' : 'text-slate-400 hover:bg-slate-100'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
 
@@ -37,97 +45,160 @@ import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.ser
             <div class="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">{{ erro() }}</div>
           }
 
-          <!-- Toggle Entrada/Saída -->
-          <div class="flex p-1 rounded-xl transition-colors border"
-               [ngClass]="t.isDark() ? 'bg-[#0a0a0b] border-[#2a2a2c]' : 'bg-slate-100 border-slate-200'">
-            <button type="button" (click)="mudarTipo('saida')"
-                    class="flex-1 py-2 text-sm font-bold rounded-lg transition-all"
-                    [ngClass]="tipo() === 'saida'
-                      ? (t.isDark() ? 'bg-red-500/20 text-red-500 shadow-sm' : 'bg-white text-red-600 shadow-sm')
-                      : (t.isDark() ? 'text-gray-500 hover:text-gray-300' : 'text-slate-500 hover:text-slate-700')">
-              Despesa (Saída)
-            </button>
-            <button type="button" (click)="mudarTipo('entrada')"
-                    class="flex-1 py-2 text-sm font-bold rounded-lg transition-all"
-                    [ngClass]="tipo() === 'entrada'
-                      ? (t.isDark() ? 'bg-green-500/20 text-green-500 shadow-sm' : 'bg-white text-green-600 shadow-sm')
-                      : (t.isDark() ? 'text-gray-500 hover:text-gray-300' : 'text-slate-500 hover:text-slate-700')">
-              Receita (Entrada)
-            </button>
-          </div>
+          <!-- Tipo: badge informativo na edição, toggle na criação -->
+          @if (editando) {
+            <div class="flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-semibold w-fit"
+                 [ngClass]="tipo() === 'saida'
+                   ? (t.isDark() ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-200 text-red-600')
+                   : (t.isDark() ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-green-50 border-green-200 text-green-600')">
+              <span class="w-2 h-2 rounded-full"
+                    [ngClass]="tipo() === 'saida' ? 'bg-red-500' : 'bg-green-500'"></span>
+              {{ tipo() === 'saida' ? 'Despesa (Saída)' : 'Receita (Entrada)' }}
+            </div>
+          } @else {
+            <div class="flex p-1 rounded-xl transition-colors border"
+                 [ngClass]="t.isDark() ? 'bg-[#0a0a0b] border-[#2a2a2c]' : 'bg-slate-100 border-slate-200'">
+              <button type="button" (click)="mudarTipo('saida')"
+                      class="flex-1 py-2 text-sm font-bold rounded-lg transition-all"
+                      [ngClass]="tipo() === 'saida'
+                        ? (t.isDark() ? 'bg-red-500/20 text-red-500 shadow-sm' : 'bg-white text-red-600 shadow-sm')
+                        : (t.isDark() ? 'text-gray-500 hover:text-gray-300' : 'text-slate-500 hover:text-slate-700')">
+                Despesa (Saída)
+              </button>
+              <button type="button" (click)="mudarTipo('entrada')"
+                      class="flex-1 py-2 text-sm font-bold rounded-lg transition-all"
+                      [ngClass]="tipo() === 'entrada'
+                        ? (t.isDark() ? 'bg-green-500/20 text-green-500 shadow-sm' : 'bg-white text-green-600 shadow-sm')
+                        : (t.isDark() ? 'text-gray-500 hover:text-gray-300' : 'text-slate-500 hover:text-slate-700')">
+                Receita (Entrada)
+              </button>
+            </div>
+          }
+
+          @if (editando && ehParcelado()) {
+            <div class="rounded-xl p-3 border text-xs"
+                 [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-gray-400' : 'bg-slate-50 border-slate-200 text-slate-500'">
+              Parcela do grupo · {{ grupoInfo().pagas }} paga(s) · {{ grupoInfo().atrasadas }} atrasada(s) · {{ grupoInfo().pendentes }} pendente(s)
+            </div>
+          }
 
           <!-- Descrição & Valor -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider transition-colors"
+              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
                      [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Descrição *</label>
               <input formControlName="descricao" type="text" placeholder="Ex: Pagamento de Fornecedor"
-                     class="w-full text-sm rounded-xl px-4 py-3 border outline-none transition-colors focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                     class="w-full text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                      [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900'">
+              @if (form.get('descricao')?.invalid && form.get('descricao')?.touched) {
+                <span class="text-xs text-red-500 mt-1 block">Descrição obrigatória</span>
+              }
             </div>
-            <div>
-              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider transition-colors"
-                     [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Valor (R$) *</label>
-              <input formControlName="valor" type="number" min="0" step="0.01" placeholder="0.00"
-                     class="w-full text-sm rounded-xl px-4 py-3 border outline-none transition-colors focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-bold"
-                     [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900'">
-            </div>
+
+            @if (mostrarCamposParcela()) {
+              <!-- Valor Total + Valor Parcela (lado a lado) -->
+              <div>
+                <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+                       [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Valor Total *</label>
+                <input formControlName="valor" type="number" min="0" step="0.01" placeholder="0.00"
+                       (input)="onValorTotalChange()"
+                       class="w-full text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-bold"
+                       [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900'">
+                @if (form.get('valor')?.invalid && form.get('valor')?.touched) {
+                  <span class="text-xs text-red-500 mt-1 block">Informe um valor maior que zero</span>
+                }
+              </div>
+              <div class="sm:col-span-full">
+                <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+                       [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">
+                  Valor por Parcela
+                  @if (editando && ehParcelado()) {
+                    <span class="normal-case font-normal ml-1 text-xs opacity-60">(propaga às pendentes ao salvar)</span>
+                  }
+                </label>
+                <input [(ngModel)]="valorParcela" [ngModelOptions]="{ standalone: true }"
+                       [disabled]="somenteLeitura()"
+                       type="number" min="0" step="0.01" placeholder="0.00"
+                       (input)="onValorParcelaChange()"
+                       class="w-full sm:w-1/3 text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                       [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900'">
+              </div>
+            } @else {
+              <div>
+                <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+                       [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Valor (R$) *</label>
+                <input formControlName="valor" type="number" min="0" step="0.01" placeholder="0.00"
+                       class="w-full text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-bold"
+                       [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900'">
+                @if (form.get('valor')?.invalid && form.get('valor')?.touched) {
+                  <span class="text-xs text-red-500 mt-1 block">Informe um valor maior que zero</span>
+                }
+              </div>
+            }
           </div>
 
           <!-- Categoria & Vencimento -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider transition-colors"
+              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
                      [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Categoria *</label>
+
               @if (!criandoCategoria()) {
                 <select formControlName="categoria_id"
-                        class="w-full text-sm rounded-xl px-4 py-3 border outline-none transition-colors focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                         [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
                   <option value="" disabled>Selecione...</option>
                   @for (cat of categorias(); track cat.id) {
                     <option [value]="cat.id">{{ cat.nome }}</option>
                   }
                 </select>
-                <button type="button" (click)="criandoCategoria.set(true)"
-                        class="text-xs text-blue-500 hover:text-blue-400 mt-1.5 font-medium">
-                  + Nova categoria
-                </button>
-              } @else {
-                <div class="flex gap-2">
-                  <input [(ngModel)]="nomeNovaCategoria" [ngModelOptions]="{ standalone: true }"
-                         type="text" placeholder="Nome da categoria"
-                         class="flex-1 text-sm rounded-xl px-3 py-3 border outline-none transition-colors focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                         [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900'">
-                  <button type="button" (click)="salvarNovaCategoria()" [disabled]="!nomeNovaCategoria.trim()"
-                          class="px-3 rounded-xl text-xs font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors disabled:opacity-60 shrink-0">
-                    OK
+                @if (!somenteLeitura()) {
+                  <button type="button" (click)="criandoCategoria.set(true)"
+                          class="text-xs text-blue-500 hover:text-blue-400 mt-1.5 font-medium">
+                    + Nova categoria
                   </button>
-                  <button type="button" (click)="criandoCategoria.set(false)"
-                          class="px-3 rounded-xl text-xs font-medium border transition-colors shrink-0"
-                          [ngClass]="t.isDark() ? 'border-[#2a2a2c] text-gray-300' : 'border-slate-200 text-slate-600'">
-                    ✕
+                }
+              } @else {
+                <!-- Sem botão OK: o nome é salvo junto com o lançamento -->
+                <div class="flex gap-2 items-center">
+                  <input [(ngModel)]="nomeNovaCategoria" [ngModelOptions]="{ standalone: true }"
+                         type="text" placeholder="Nome da nova categoria"
+                         autofocus
+                         class="flex-1 text-sm rounded-xl px-3 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                         [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900'">
+                  <button type="button" (click)="criandoCategoria.set(false); nomeNovaCategoria = ''"
+                          title="Voltar para seleção"
+                          class="p-2.5 rounded-xl border transition-colors shrink-0"
+                          [ngClass]="t.isDark() ? 'border-[#2a2a2c] text-gray-400 hover:bg-[#18181b]' : 'border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                   </button>
                 </div>
+                <p class="text-xs mt-1.5 opacity-60"
+                   [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">
+                  A categoria será criada ao salvar o lançamento.
+                </p>
               }
             </div>
             <div>
-              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider transition-colors"
+              <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
                      [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Data de Vencimento *</label>
               <input formControlName="data_vencimento" type="date"
-                     class="w-full text-sm rounded-xl px-4 py-3 border outline-none transition-colors focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                     class="w-full text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                      [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-gray-300' : 'bg-slate-50 border-slate-200 text-slate-700'">
+              @if (form.get('data_vencimento')?.invalid && form.get('data_vencimento')?.touched) {
+                <span class="text-xs text-red-500 mt-1 block">Data de vencimento obrigatória</span>
+              }
             </div>
           </div>
 
           <!-- Toggles -->
-          <div class="pt-4 border-t space-y-4 transition-colors" [ngClass]="t.isDark() ? 'border-[#2a2a2c]' : 'border-slate-100'">
+          <div class="pt-4 border-t space-y-4" [ngClass]="t.isDark() ? 'border-[#2a2a2c]' : 'border-slate-100'">
 
-            <!-- Já pago? -->
             <div class="flex items-center justify-between">
               <h4 class="font-medium text-sm">Este lançamento já foi {{ tipo() === 'saida' ? 'pago' : 'recebido' }}?</h4>
-              <button type="button" (click)="togglePago()"
-                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200"
-                      [ngClass]="pago() ? 'bg-blue-600' : (t.isDark() ? 'bg-[#2a2a2c]' : 'bg-slate-300')">
+              <button type="button" (click)="togglePago()" [disabled]="somenteLeitura()"
+                      class="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200"
+                      [ngClass]="(pago() ? 'bg-blue-600' : (t.isDark() ? 'bg-[#2a2a2c]' : 'bg-slate-300')) + (somenteLeitura() ? ' cursor-default' : ' cursor-pointer')">
                 <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200"
                       [ngClass]="pago() ? 'translate-x-5' : 'translate-x-0'"></span>
               </button>
@@ -135,22 +206,21 @@ import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.ser
 
             @if (pago()) {
               <div>
-                <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider transition-colors"
+                <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
                        [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">
                   Data do {{ tipo() === 'saida' ? 'Pagamento' : 'Recebimento' }}
                 </label>
                 <input formControlName="data_pagamento" type="date"
-                       class="w-full sm:w-1/2 text-sm rounded-xl px-4 py-3 border outline-none transition-colors focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                       class="w-full sm:w-1/2 text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                        [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-gray-300' : 'bg-slate-50 border-slate-200 text-slate-700'">
               </div>
             }
 
-            <!-- Parcelar (só na criação) -->
-            @if (!editando) {
+            @if (podeParcelar()) {
               <div class="flex items-center justify-between">
                 <div>
-                  <h4 class="font-medium text-sm">Parcelar</h4>
-                  <p class="text-xs transition-colors" [ngClass]="t.isDark() ? 'text-gray-500' : 'text-slate-500'">
+                  <h4 class="font-medium text-sm">{{ editando ? 'Converter em parcelado' : 'Parcelar' }}</h4>
+                  <p class="text-xs opacity-60" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">
                     Divide o valor em parcelas mensais automáticas.
                   </p>
                 </div>
@@ -164,11 +234,12 @@ import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.ser
 
               @if (parcelado()) {
                 <div>
-                  <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider transition-colors"
+                  <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
                          [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">Número de Parcelas</label>
                   <input [(ngModel)]="numeroParcelas" [ngModelOptions]="{ standalone: true }"
                          type="number" min="2" max="60"
-                         class="w-full sm:w-1/3 text-sm rounded-xl px-4 py-3 border outline-none transition-colors focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                         (input)="onNumeroParcelasChange()"
+                         class="w-full sm:w-1/3 text-sm rounded-xl px-4 py-3 border outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                          [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white' : 'bg-slate-50 border-slate-200 text-slate-900'">
                 </div>
               }
@@ -177,15 +248,23 @@ import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.ser
 
           <!-- Footer -->
           <div class="flex justify-end gap-3 pt-2">
-            <button type="button" (click)="fechar()"
-                    class="px-5 py-2.5 rounded-xl text-sm font-medium border transition-colors"
-                    [ngClass]="t.isDark() ? 'border-[#2a2a2c] text-gray-300 hover:bg-[#18181b]' : 'border-slate-200 text-slate-600 hover:bg-slate-100'">
-              Cancelar
-            </button>
-            <button type="submit" [disabled]="salvando()"
-                    class="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-60 disabled:cursor-not-allowed">
-              {{ salvando() ? 'Salvando...' : 'Salvar Lançamento' }}
-            </button>
+            @if (somenteLeitura()) {
+              <button type="button" (click)="fechar()"
+                      class="px-5 py-2.5 rounded-xl text-sm font-medium border transition-colors"
+                      [ngClass]="t.isDark() ? 'border-[#2a2a2c] text-gray-300 hover:bg-[#18181b]' : 'border-slate-200 text-slate-600 hover:bg-slate-100'">
+                Fechar
+              </button>
+            } @else {
+              <button type="button" (click)="fechar()"
+                      class="px-5 py-2.5 rounded-xl text-sm font-medium border transition-colors"
+                      [ngClass]="t.isDark() ? 'border-[#2a2a2c] text-gray-300 hover:bg-[#18181b]' : 'border-slate-200 text-slate-600 hover:bg-slate-100'">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="salvando()"
+                      class="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-60 disabled:cursor-not-allowed">
+                {{ salvando() ? 'Salvando...' : 'Salvar Lançamento' }}
+              </button>
+            }
           </div>
         </form>
       </div>
@@ -194,6 +273,7 @@ import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.ser
 })
 export class LancamentoFormModalComponent implements OnInit {
   @Input() lancamento: Lancamento | null = null;
+  @Input() todosLancamentos: Lancamento[] = [];
   @Output() fechado = new EventEmitter<void>();
   @Output() salvo   = new EventEmitter<void>();
 
@@ -203,39 +283,68 @@ export class LancamentoFormModalComponent implements OnInit {
   private lancApi = inject(LancamentosApiService);
   private fb      = inject(FormBuilder);
 
-  tipo       = signal<TipoTransacao>('saida');
-  pago       = signal(false);
-  parcelado  = signal(false);
-  categorias = signal<Categoria[]>([]);
+  tipo             = signal<TipoTransacao>('saida');
+  pago             = signal(false);
+  parcelado        = signal(false);
+  categorias       = signal<Categoria[]>([]);
   criandoCategoria = signal(false);
-  salvando   = signal(false);
-  erro       = signal('');
+  salvando         = signal(false);
+  erro             = signal('');
 
   nomeNovaCategoria = '';
   numeroParcelas    = 2;
-  editando = false;
+  valorParcela      = 0;
+  editando          = false;
 
+  // categoria_id não tem Validators.required — validamos manualmente em salvar()
   form = this.fb.group({
     descricao:       ['', Validators.required],
     valor:           [null as number | null, [Validators.required, Validators.min(0.01)]],
-    categoria_id:    ['', Validators.required],
+    categoria_id:    [''],
     data_vencimento: ['', Validators.required],
     data_pagamento:  [''],
   });
 
+  mostrarCamposParcela = computed(() => this.parcelado() || (this.editando && this.ehParcelado()));
+  ehParcelado          = computed(() => !!this.lancamento?.grupo_parcelamento_id);
+  somenteLeitura       = computed(() => this.lancamento?.status === 'pago' || this.lancamento?.status === 'cancelado');
+
+  grupoInfo = computed(() => {
+    const gid = this.lancamento?.grupo_parcelamento_id;
+    if (!gid) return { pagas: 0, atrasadas: 0, pendentes: 0 };
+    const g = this.todosLancamentos.filter(l => l.grupo_parcelamento_id === gid && l.status !== 'cancelado');
+    return {
+      pagas:     g.filter(l => l.status === 'pago').length,
+      atrasadas: g.filter(l => l.status === 'atrasado').length,
+      pendentes: g.filter(l => l.status === 'pendente').length,
+    };
+  });
+
+  podeParcelar = computed(() => {
+    if (this.pago()) return false;
+    if (!this.editando) return true;
+    return !this.ehParcelado() && ['pendente', 'atrasado'].includes(this.lancamento?.status ?? '');
+  });
+
   ngOnInit() {
     this.editando = !!this.lancamento;
+    const hoje = dataLocalIso();
     if (this.lancamento) {
       this.tipo.set(this.lancamento.tipo);
       this.pago.set(this.lancamento.status === 'pago');
+      const valorNum = Number(this.lancamento.valor);
       this.form.patchValue({
         descricao:       this.lancamento.descricao,
-        valor:           Number(this.lancamento.valor),
+        valor:           valorNum,
         categoria_id:    this.lancamento.categoria_id,
         data_vencimento: this.lancamento.data_vencimento,
-        data_pagamento:  this.lancamento.data_pagamento ?? '',
+        data_pagamento:  this.lancamento.data_pagamento ?? hoje,
       });
+      this.valorParcela = valorNum;
+    } else {
+      this.form.patchValue({ data_vencimento: hoje, data_pagamento: hoje });
     }
+    if (this.somenteLeitura()) this.form.disable();
     this.carregarCategorias();
   }
 
@@ -259,32 +368,74 @@ export class LancamentoFormModalComponent implements OnInit {
   togglePago() {
     this.pago.update(v => !v);
     if (this.pago() && !this.form.value.data_pagamento) {
-      this.form.patchValue({ data_pagamento: new Date().toISOString().slice(0, 10) });
+      this.form.patchValue({ data_pagamento: dataLocalIso() });
     }
   }
 
-  toggleParcelado() { this.parcelado.update(v => !v); }
+  toggleParcelado() {
+    this.parcelado.update(v => !v);
+    if (this.parcelado()) this.onValorTotalChange();
+  }
 
-  salvarNovaCategoria() {
-    const id = this.empresaId;
-    const nome = this.nomeNovaCategoria.trim();
-    if (!id || !nome) return;
-    this.catApi.criar(id, { nome, tipo: this.tipo() }).subscribe(cat => {
-      this.categorias.update(lista => [...lista, cat]);
-      this.form.patchValue({ categoria_id: cat.id });
-      this.nomeNovaCategoria = '';
-      this.criandoCategoria.set(false);
-    });
+  onNumeroParcelasChange() { this.onValorTotalChange(); }
+
+  onValorTotalChange() {
+    const total = Number(this.form.value.valor) || 0;
+    const n = Math.max(this.numeroParcelas, 2);
+    this.valorParcela = total > 0 ? +(total / n).toFixed(2) : 0;
+  }
+
+  onValorParcelaChange() {
+    const n = this.editando ? this.totalParcelasGrupo() : Math.max(this.numeroParcelas, 2);
+    this.form.patchValue({ valor: +(this.valorParcela * n).toFixed(2) });
+  }
+
+  private totalParcelasGrupo(): number {
+    const gid = this.lancamento?.grupo_parcelamento_id;
+    if (!gid) return 1;
+    return this.todosLancamentos.filter(l => l.grupo_parcelamento_id === gid && l.status !== 'cancelado').length || 1;
   }
 
   salvar() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const id = this.empresaId;
     if (!id) { this.erro.set('Nenhuma empresa selecionada.'); return; }
+
+    // Validação de categoria: precisa ter categoria_id OU estar criando nova com nome
+    const temCategoriaId   = !!this.form.value.categoria_id;
+    const temNovaCategoria = this.criandoCategoria() && !!this.nomeNovaCategoria.trim();
+    if (!temCategoriaId && !temNovaCategoria) {
+      this.erro.set('Selecione ou informe uma categoria.');
+      return;
+    }
+
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
 
     this.salvando.set(true);
     this.erro.set('');
 
+    // Se nova categoria → criar primeiro, depois salvar lançamento com o ID retornado
+    const categoriaObs: Observable<Categoria | null> = temNovaCategoria
+      ? this.catApi.criar(id, { nome: this.nomeNovaCategoria.trim(), tipo: this.tipo() })
+      : of(null);
+
+    categoriaObs.pipe(
+      switchMap(cat => {
+        if (cat) this.form.patchValue({ categoria_id: cat.id });
+
+        if (this.editando && this.ehParcelado()) return this.salvarEdicaoParcelado(id);
+        if (this.editando && this.parcelado())   return this.lancApi.parcelar(id, this.lancamento!.id, this.numeroParcelas);
+        return this.salvarSimples(id);
+      })
+    ).subscribe({
+      next: () => { this.salvando.set(false); this.salvo.emit(); this.fechado.emit(); },
+      error: (err) => {
+        this.erro.set(extrairErroApi(err, 'Erro ao salvar lançamento.'));
+        this.salvando.set(false);
+      },
+    });
+  }
+
+  private salvarSimples(id: string) {
     const v = this.form.value;
     const dto = {
       categoria_id:    v.categoria_id!,
@@ -295,18 +446,33 @@ export class LancamentoFormModalComponent implements OnInit {
       data_pagamento:  this.pago() ? (v.data_pagamento || null) : null,
       status:          (this.pago() ? 'pago' : 'pendente') as 'pago' | 'pendente',
     };
-
-    const req: Observable<unknown> = this.editando
+    return this.editando
       ? this.lancApi.atualizar(id, this.lancamento!.id, dto)
       : this.lancApi.criar(id, dto, this.parcelado() ? this.numeroParcelas : 1);
+  }
 
-    req.subscribe({
-      next: () => { this.salvando.set(false); this.salvo.emit(); this.fechado.emit(); },
-      error: (err) => {
-        this.erro.set(err?.error?.errors?.[0] ?? 'Erro ao salvar lançamento.');
-        this.salvando.set(false);
-      },
-    });
+  private salvarEdicaoParcelado(id: string) {
+    const v = this.form.value;
+    const valorParcela = this.valorParcela > 0 ? this.valorParcela : Number(v.valor);
+    const dto = {
+      categoria_id:    v.categoria_id!,
+      descricao:       v.descricao!,
+      tipo:            this.tipo(),
+      valor:           valorParcela,
+      data_vencimento: v.data_vencimento!,
+      data_pagamento:  this.pago() ? (v.data_pagamento || null) : null,
+      status:          (this.pago() ? 'pago' : 'pendente') as 'pago' | 'pendente',
+    };
+    const valorOriginal = Number(this.lancamento!.valor);
+    const valorMudou    = Math.abs(valorParcela - valorOriginal) > 0.001;
+
+    return this.lancApi.atualizar(id, this.lancamento!.id, dto).pipe(
+      switchMap(() =>
+        valorMudou
+          ? this.lancApi.propagarGrupo(id, this.lancamento!.id, valorParcela)
+          : of(null)
+      )
+    );
   }
 
   fechar(event?: Event) {

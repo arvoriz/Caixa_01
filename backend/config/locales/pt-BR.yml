@@ -7,6 +7,39 @@ pt-BR:
         invalid: "é inválido"
         too_short: "é muito curto (mínimo %{count} caracteres)"
         too_long: "é muito longo (máximo %{count} caracteres)"
+        greater_than: "deve ser maior que %{count}"
+        greater_than_or_equal_to: "deve ser maior ou igual a %{count}"
+        less_than: "deve ser menor que %{count}"
+        less_than_or_equal_to: "deve ser menor ou igual a %{count}"
+        not_a_number: "não é um número"
+        required: "deve existir"
+    attributes:
+      empresa:
+        cnpj: "CNPJ"
+        razao_social: "Razão social"
+        nome_fantasia: "Nome fantasia"
+        saldo_atual: "Saldo"
+      lancamento:
+        descricao: "Descrição"
+        tipo: "Tipo"
+        valor: "Valor"
+        categoria: "Categoria"
+        categoria_id: "Categoria"
+        data_vencimento: "Data de vencimento"
+        data_pagamento: "Data de pagamento"
+        status: "Status"
+      categoria:
+        nome: "Nome"
+        tipo: "Tipo"
+      usuario:
+        email: "E-mail"
+      acesso_empresa:
+        papel: "Papel"
+        usuario_id: "Usuário"
+      convite:
+        token: "Token"
+        papel: "Papel"
+        expira_em: "Data de expiração"
   errors:
     unauthorized: "Não autorizado"
     forbidden: "Acesso negado"
