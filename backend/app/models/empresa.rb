@@ -3,8 +3,8 @@ class Empresa < ApplicationRecord
   has_many :usuarios, through: :acessos_empresas
   has_many :categorias
   has_many :lancamentos
-  has_many :emprestimos_como_origem,  class_name: 'EmprestimoMutuo', foreign_key: :empresa_origem_id
-  has_many :emprestimos_como_destino, class_name: 'EmprestimoMutuo', foreign_key: :empresa_destino_id
+  has_many :emprestimos_como_origem,  class_name: 'Emprestimo', foreign_key: :empresa_origem_id
+  has_many :emprestimos_como_destino, class_name: 'Emprestimo', foreign_key: :empresa_destino_id
 
   CNPJ_FORMAT = /\A\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\z/
 

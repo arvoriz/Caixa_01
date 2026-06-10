@@ -55,7 +55,8 @@ import { EmpresaAtivaService } from '../../../core/services/empresa-ativa.servic
           Empresas (CNPJs)
         </a>
 
-        <a href="#" class="flex items-center px-4 py-3 rounded-xl transition-colors"
+        <a routerLink="/emprestimos" routerLinkActive="!bg-blue-600/10 !text-blue-500"
+           class="flex items-center px-4 py-3 rounded-xl transition-colors"
            [ngClass]="theme.isDark() ? 'text-gray-400 hover:bg-[#18181b] hover:text-gray-200' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 21h8"/><path d="M12 17v4"/><path d="m10 13 2 2 2-2"/><path d="M12 15V8"/>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_09_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_10_120000) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -74,13 +74,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_09_120000) do
   end
 
   create_table "emprestimos_mutuo", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "empresa_origem_id", null: false
+    t.uuid "empresa_origem_id"
     t.uuid "empresa_destino_id", null: false
     t.string "descricao"
     t.decimal "valor", precision: 15, scale: 2, null: false
     t.decimal "saldo_devedor", precision: 15, scale: 2, null: false
     t.enum "status", default: "ativo", null: false, enum_type: "status_emprestimo"
     t.timestamptz "criado_em", default: -> { "now()" }, null: false
+    t.string "tipo", default: "mutuo", null: false
+    t.string "credor_externo"
+    t.date "data_contrato", default: -> { "CURRENT_DATE" }, null: false
     t.index ["empresa_destino_id"], name: "emprestimos_mutuo_empresa_destino_id_idx"
     t.index ["empresa_origem_id"], name: "emprestimos_mutuo_empresa_origem_id_idx"
   end

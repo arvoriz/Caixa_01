@@ -24,6 +24,11 @@ Rails.application.routes.draw do
             post  :parcelar
           end
         end
+        resources :emprestimos, only: [:index, :create, :update, :destroy] do
+          member do
+            post :registrar_pagamento
+          end
+        end
       end
     end
   end
