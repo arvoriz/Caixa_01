@@ -37,6 +37,7 @@ Rails.application.routes.draw do
             get :externos
           end
         end
+        resource :dashboard, only: [:show], controller: :dashboard
       end
     end
   end
