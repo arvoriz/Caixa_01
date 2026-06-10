@@ -65,7 +65,8 @@ import { EmpresaAtivaService } from '../../../core/services/empresa-ativa.servic
           Empréstimos
         </a>
 
-        <a href="#" class="flex items-center px-4 py-3 rounded-xl transition-colors"
+        <a routerLink="/relatorios" routerLinkActive="!bg-blue-600/10 !text-blue-500"
+           class="flex items-center px-4 py-3 rounded-xl transition-colors"
            [ngClass]="theme.isDark() ? 'text-gray-400 hover:bg-[#18181b] hover:text-gray-200' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>

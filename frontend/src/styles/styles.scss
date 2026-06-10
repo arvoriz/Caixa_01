@@ -7,3 +7,24 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Impressão / Exportar PDF: mostra apenas o relatório, esconde o restante da UI. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .printable-report,
+  .printable-report * {
+    visibility: visible;
+  }
+  .printable-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 1.5rem;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

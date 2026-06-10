@@ -29,6 +29,14 @@ Rails.application.routes.draw do
             post :registrar_pagamento
           end
         end
+        resources :relatorios, only: [] do
+          collection do
+            get :fluxo_caixa
+            get :contas
+            get :intercompany
+            get :externos
+          end
+        end
       end
     end
   end
