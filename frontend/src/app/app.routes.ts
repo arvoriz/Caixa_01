@@ -46,6 +46,10 @@ export const routes: Routes = [
         path: 'callback',
         loadComponent: () => import('./features/auth/callback/callback.component').then(m => m.CallbackComponent),
       },
+      {
+        path: 'redefinir-senha',
+        loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha.component').then(m => m.RedefinirSenhaComponent),
+      },
     ],
   },
   {

@@ -41,6 +41,13 @@ export class LoginComponent implements OnInit, OnDestroy {
   erroMfa       = '';
   verificandoMfa = false;
 
+  // ── Etapa recuperar senha ──
+  etapaRecuperarSenha   = false;
+  emailRecuperacao      = '';
+  enviandoRecuperacao   = false;
+  erroRecuperacao       = '';
+  sucessoRecuperacao    = '';
+
   private handleMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) return;
     if (event.data?.type === 'SUPABASE_AUTH_SUCCESS' && event.data.accessToken) {
@@ -164,5 +171,34 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   entrarComGoogle(): void {
     this.supabase.entrarComGoogle();
+  }
+
+  abrirRecuperarSenha(event: Event): void {
+    event.preventDefault();
+    this.etapaRecuperarSenha = true;
+    this.emailRecuperacao    = this.formulario.value.email ?? '';
+    this.erroRecuperacao     = '';
+    this.sucessoRecuperacao  = '';
+  }
+
+  fecharRecuperarSenha(): void {
+    this.etapaRecuperarSenha = false;
+    this.erroRecuperacao     = '';
+    this.sucessoRecuperacao  = '';
+  }
+
+  async enviarRecuperarSenha(): Promise<void> {
+    if (!this.emailRecuperacao) return;
+    this.enviandoRecuperacao = true;
+    this.erroRecuperacao     = '';
+    this.sucessoRecuperacao  = '';
+
+    const erro = await this.supabase.enviarEmailRedefinicaoSenha(this.emailRecuperacao);
+    this.enviandoRecuperacao = false;
+    if (erro) {
+      this.erroRecuperacao = erro;
+    } else {
+      this.sucessoRecuperacao = 'Se o e-mail estiver cadastrado, enviaremos um link para redefinir sua senha.';
+    }
   }
 }

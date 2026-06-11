@@ -7,6 +7,7 @@ import { EmpresaAtivaService } from '../../core/services/empresa-ativa.service';
 import { CategoriasApiService, Categoria, TipoTransacao } from '../../api/categorias-api.service';
 import { LancamentosApiService, Lancamento } from '../../api/lancamentos-api.service';
 import { extrairErroApi } from '../../core/utils/erro-api';
+import { ScrollTopOnChangeDirective } from '../../shared/directives/scroll-to-top-on-change.directive';
 
 /** Data atual no formato YYYY-MM-DD no fuso horário local (evita o "dia seguinte" do toISOString em UTC). */
 function dataLocalIso(): string {
@@ -20,7 +21,7 @@ function dataLocalIso(): string {
 @Component({
   selector: 'app-lancamento-form-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ScrollTopOnChangeDirective],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
          (click)="fechar($event)">
@@ -39,7 +40,8 @@ function dataLocalIso(): string {
         </div>
 
         <!-- Body -->
-        <form [formGroup]="form" (ngSubmit)="salvar()" class="p-6 overflow-y-auto space-y-6">
+        <form [formGroup]="form" (ngSubmit)="salvar()" class="p-6 overflow-y-auto space-y-6"
+              [appScrollTopOnChange]="erro()">
 
           @if (erro()) {
             <div class="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">{{ erro() }}</div>

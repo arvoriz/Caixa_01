@@ -6,11 +6,12 @@ import { EmpresaAtivaService } from '../../core/services/empresa-ativa.service';
 import { EmprestimosApiService, Emprestimo, StatusEmprestimo } from '../../api/emprestimos-api.service';
 import { extrairErroApi } from '../../core/utils/erro-api';
 import { formatarValor, formatarData, labelTipo, nomeCredor } from './emprestimos.helpers';
+import { ScrollTopOnChangeDirective } from '../../shared/directives/scroll-to-top-on-change.directive';
 
 @Component({
   selector: 'app-emprestimo-detalhes-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ScrollTopOnChangeDirective],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" (click)="fechar($event)">
       <div class="w-full max-w-lg rounded-2xl shadow-2xl border flex flex-col max-h-[90vh] overflow-hidden"
@@ -26,7 +27,7 @@ import { formatarValor, formatarData, labelTipo, nomeCredor } from './emprestimo
         </div>
 
         <!-- Body -->
-        <div class="p-6 space-y-6 overflow-y-auto">
+        <div class="p-6 space-y-6 overflow-y-auto" [appScrollTopOnChange]="erro()">
 
           @if (erro()) {
             <div class="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">{{ erro() }}</div>

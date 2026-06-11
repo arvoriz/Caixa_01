@@ -8,11 +8,12 @@ import {
   corPapel, corPapelBg, podeRemoverAcesso,
 } from './empresas.helpers';
 import { extrairErroApi } from '../../core/utils/erro-api';
+import { ScrollTopOnChangeDirective } from '../../shared/directives/scroll-to-top-on-change.directive';
 
 @Component({
   selector: 'app-empresa-gerenciar-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ScrollTopOnChangeDirective],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
          (click)="fechar($event)">
@@ -70,7 +71,7 @@ import { extrairErroApi } from '../../core/utils/erro-api';
         </div>
 
         <!-- Body -->
-        <div class="p-6 overflow-y-auto flex-1">
+        <div class="p-6 overflow-y-auto flex-1" [appScrollTopOnChange]="erro">
 
           <!-- TAB: Dados -->
           @if (abaAtiva === 'dados') {

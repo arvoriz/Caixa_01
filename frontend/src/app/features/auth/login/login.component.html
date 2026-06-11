@@ -56,7 +56,57 @@
   <!-- Card central -->
   <div class="card-login">
 
-   @if (etapaMfa) {
+   @if (etapaRecuperarSenha) {
+
+    <!-- ── Etapa: Recuperar senha ── -->
+    <div class="cabecalho-login">
+      <div class="icone-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="16" x="2" y="4" rx="2"/>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+      <h2 class="titulo-login">Recuperar senha</h2>
+      <p class="subtitulo-login">Informe seu e-mail para receber o link de redefinição.</p>
+    </div>
+
+    <form class="form-login" (ngSubmit)="enviarRecuperarSenha()">
+      @if (erroRecuperacao) {
+        <div class="alerta-erro">{{ erroRecuperacao }}</div>
+      }
+      @if (sucessoRecuperacao) {
+        <div class="alerta-sucesso">{{ sucessoRecuperacao }}</div>
+      }
+
+      <div class="campo-login">
+        <span class="campo-login__icone">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </span>
+        <input
+          class="campo-login__input"
+          type="email"
+          [(ngModel)]="emailRecuperacao"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Endereço de e-mail"
+          autocomplete="email"
+        />
+      </div>
+
+      <button class="btn-entrar" type="submit" [disabled]="enviandoRecuperacao || !emailRecuperacao">
+        {{ enviandoRecuperacao ? 'Enviando...' : 'Enviar link de redefinição' }}
+      </button>
+    </form>
+
+    <div class="esqueceu-senha" style="justify-content:center;margin-top:1rem;">
+      <a href="#" (click)="$event.preventDefault(); fecharRecuperarSenha()">Voltar ao login</a>
+    </div>
+
+   } @else if (etapaMfa) {
 
     <!-- ── Etapa: Verificação 2FA ── -->
     <div class="cabecalho-login">
@@ -200,7 +250,7 @@
 
       @if (isLogin) {
         <div class="esqueceu-senha">
-          <a href="#">Esqueceu a senha?</a>
+          <a href="#" (click)="abrirRecuperarSenha($event)">Esqueceu a senha?</a>
         </div>
       }
 

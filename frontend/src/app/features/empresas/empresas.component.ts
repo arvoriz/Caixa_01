@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../core/services/theme.service';
 import { EmpresasApiService, Empresa } from '../../api/empresas-api.service';
+import { EmpresaAtivaService } from '../../core/services/empresa-ativa.service';
 import { EmpresaCardComponent } from './empresa-card.component';
 import { EmpresaCriarModalComponent } from './empresa-criar-modal.component';
 import { EmpresaGerenciarModalComponent } from './empresa-gerenciar-modal.component';
@@ -101,6 +102,7 @@ import { EmpresaGerenciarModalComponent } from './empresa-gerenciar-modal.compon
 export class EmpresasComponent implements OnInit {
   t   = inject(ThemeService);
   private api = inject(EmpresasApiService);
+  private empresaAtiva = inject(EmpresaAtivaService);
 
   empresas: Empresa[]     = [];
   carregando              = true;
@@ -117,6 +119,8 @@ export class EmpresasComponent implements OnInit {
 
   onEmpresaCriada(empresa: Empresa) {
     this.empresas = [...this.empresas, empresa];
+    this.empresaAtiva.empresas.set(this.empresas);
+    this.empresaAtiva.selecionar(empresa);
   }
 
   onEmpresaAtualizada(empresa: Empresa) {

@@ -84,6 +84,13 @@ export class SupabaseService {
     return error?.message ?? null;
   }
 
+  async enviarEmailRedefinicaoSenha(email: string): Promise<string | null> {
+    const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/redefinir-senha`,
+    });
+    return error?.message ?? null;
+  }
+
   // ── MFA / 2FA ──────────────────────────────────────────────────────────────
 
   async listarFatoresMfa(): Promise<Array<{ id: string; status: string }>> {
