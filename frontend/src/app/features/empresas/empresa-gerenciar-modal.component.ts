@@ -119,6 +119,46 @@ import { ScrollTopOnChangeDirective } from '../../shared/directives/scroll-to-to
                   </button>
                 </div>
               }
+
+              <!-- Zona de perigo: dissolução da empresa (somente dono) -->
+              @if (empresa.papel === 'dono') {
+                <div class="mt-6 p-4 rounded-xl border border-red-500/20 bg-red-500/5">
+                  <h4 class="font-bold text-sm text-red-500 mb-1">Dissolver empresa</h4>
+                  <p class="text-xs mb-3 transition-colors" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">
+                    Exclui permanentemente esta empresa e todos os dados relacionados (lançamentos,
+                    categorias, empréstimos, acessos e convites). Esta ação não pode ser desfeita.
+                  </p>
+
+                  @if (!confirmandoExclusao) {
+                    <button type="button" (click)="confirmandoExclusao = true"
+                            class="px-4 py-2 rounded-lg text-xs font-medium text-red-500 border border-red-500/30 hover:bg-red-500/10 transition-colors">
+                      Dissolver empresa
+                    </button>
+                  } @else {
+                    <div class="space-y-3">
+                      <p class="text-xs" [ngClass]="t.isDark() ? 'text-gray-400' : 'text-slate-500'">
+                        Para confirmar, digite o CNPJ <strong>{{ empresa.cnpj }}</strong> abaixo:
+                      </p>
+                      <input type="text" [(ngModel)]="confirmacaoCnpj" [ngModelOptions]="{ standalone: true }"
+                             placeholder="00.000.000/0000-00"
+                             class="w-full text-sm rounded-xl px-4 py-3 border outline-none transition-colors"
+                             [ngClass]="t.isDark() ? 'bg-[#18181b] border-[#2a2a2c] text-white placeholder-gray-600' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'">
+                      <div class="flex justify-end gap-3">
+                        <button type="button" (click)="confirmandoExclusao = false; confirmacaoCnpj = ''"
+                                class="px-4 py-2 rounded-lg text-xs font-medium border transition-colors"
+                                [ngClass]="t.isDark() ? 'border-[#2a2a2c] text-gray-300 hover:bg-[#18181b]' : 'border-slate-200 text-slate-600 hover:bg-slate-100'">
+                          Cancelar
+                        </button>
+                        <button type="button" (click)="excluirEmpresa()"
+                                [disabled]="excluindo || confirmacaoCnpj !== empresa.cnpj"
+                                class="px-4 py-2 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                          {{ excluindo ? 'Excluindo...' : 'Excluir permanentemente' }}
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
             </div>
           }
 
@@ -231,8 +271,9 @@ import { ScrollTopOnChangeDirective } from '../../shared/directives/scroll-to-to
 })
 export class EmpresaGerenciarModalComponent implements OnInit {
   @Input() empresa!: Empresa;
-  @Output() fechado          = new EventEmitter<void>();
+  @Output() fechado           = new EventEmitter<void>();
   @Output() empresaAtualizada = new EventEmitter<Empresa>();
+  @Output() empresaExcluida   = new EventEmitter<string>();
 
   t       = inject(ThemeService);
   private api = inject(EmpresasApiService);
@@ -247,6 +288,10 @@ export class EmpresaGerenciarModalComponent implements OnInit {
   linkGerado  = '';
   linkCopiado = false;
   gerandoLink = false;
+
+  confirmandoExclusao = false;
+  confirmacaoCnpj     = '';
+  excluindo           = false;
 
   formDados = this.fb.group({ nome_fantasia: [''] });
 
@@ -318,6 +363,23 @@ export class EmpresaGerenciarModalComponent implements OnInit {
     navigator.clipboard.writeText(this.linkGerado).then(() => {
       this.linkCopiado = true;
       setTimeout(() => this.linkCopiado = false, 2500);
+    });
+  }
+
+  excluirEmpresa() {
+    if (this.confirmacaoCnpj !== this.empresa.cnpj) return;
+    this.excluindo = true;
+    this.erro = '';
+    this.api.excluir(this.empresa.id).subscribe({
+      next: () => {
+        this.excluindo = false;
+        this.empresaExcluida.emit(this.empresa.id);
+        this.fechado.emit();
+      },
+      error: (err) => {
+        this.erro = extrairErroApi(err, 'Erro ao excluir empresa.');
+        this.excluindo = false;
+      },
     });
   }
 

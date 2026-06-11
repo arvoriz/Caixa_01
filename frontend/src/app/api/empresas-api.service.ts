@@ -56,6 +56,12 @@ export class EmpresasApiService {
       .pipe(map(r => r.data));
   }
 
+  excluir(empresaId: string): Observable<void> {
+    return this.http
+      .delete<RespostaApi<unknown>>(`${this.base}/${empresaId}`)
+      .pipe(map(() => void 0));
+  }
+
   listarAcessos(empresaId: string): Observable<AcessoDetalhe[]> {
     return this.http
       .get<RespostaApi<AcessoDetalhe[]>>(`${this.base}/${empresaId}/acessos`)

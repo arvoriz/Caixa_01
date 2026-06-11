@@ -94,6 +94,7 @@ import { EmpresaGerenciarModalComponent } from './empresa-gerenciar-modal.compon
           [empresa]="empresaSelecionada"
           (fechado)="empresaSelecionada = null"
           (empresaAtualizada)="onEmpresaAtualizada($event)"
+          (empresaExcluida)="onEmpresaExcluida($event)"
         />
       }
     </div>
@@ -126,5 +127,11 @@ export class EmpresasComponent implements OnInit {
   onEmpresaAtualizada(empresa: Empresa) {
     this.empresas = this.empresas.map(e => e.id === empresa.id ? empresa : e);
     this.empresaSelecionada = empresa;
+  }
+
+  onEmpresaExcluida(empresaId: string) {
+    this.empresas = this.empresas.filter(e => e.id !== empresaId);
+    this.empresaSelecionada = null;
+    this.empresaAtiva.remover(empresaId);
   }
 }

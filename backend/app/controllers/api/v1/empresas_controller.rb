@@ -52,6 +52,27 @@ module Api
         render_erro(["Empresa não encontrada"], status: :not_found)
       end
 
+      def destroy
+        empresa   = usuario_atual.empresas.find(params[:id])
+        meu_papel = empresa.acessos_empresas.find_by!(usuario_id: usuario_atual.id).papel
+
+        return render_erro(["Apenas o dono pode excluir a empresa"], status: :forbidden) unless meu_papel == "dono"
+
+        Auditoria::Registrador.registrar(
+          usuario:     usuario_atual,
+          empresa:     empresa,
+          acao:        'excluir_empresa',
+          entidade:    'empresa',
+          entidade_id: empresa.id,
+          detalhes:    { cnpj: empresa.cnpj, razao_social: empresa.razao_social, nome_fantasia: empresa.nome_fantasia }
+        )
+
+        empresa.destroy!
+        render_sucesso({})
+      rescue ActiveRecord::RecordNotFound
+        render_erro(["Empresa não encontrada"], status: :not_found)
+      end
+
       def transferir_titularidade
         empresa   = usuario_atual.empresas.find(params[:id])
         meu_acc   = empresa.acessos_empresas.find_by!(usuario_id: usuario_atual.id)

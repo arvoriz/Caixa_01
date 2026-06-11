@@ -30,6 +30,16 @@ export class EmpresaAtivaService {
     this.authApi.salvarUltimaEmpresa(empresa.id).subscribe();
   }
 
+  /** Remove a empresa da lista; se ela era a ativa, seleciona outra (ou nenhuma). */
+  remover(empresaId: string) {
+    this.empresas.update(lista => lista.filter(e => e.id !== empresaId));
+    if (this.ativa()?.id === empresaId) {
+      const proxima = this.empresas()[0] ?? null;
+      if (proxima) this.selecionar(proxima);
+      else this.ativa.set(null);
+    }
+  }
+
   limpar() {
     this.empresas.set([]);
     this.ativa.set(null);

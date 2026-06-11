@@ -10,7 +10,7 @@ Rails.application.routes.draw do
         member { post :aceitar }
       end
 
-      resources :empresas, only: [:index, :create, :update] do
+      resources :empresas, only: [:index, :create, :update, :destroy] do
         member do
           post :transferir_titularidade
         end
